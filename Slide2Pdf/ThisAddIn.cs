@@ -74,6 +74,10 @@ namespace Slide2Pdf
             // Return the bounding rectangle in relative coordinates
             double slideWidth = slide.Master.Width;
             double slideHeight = slide.Master.Height;
+            minX = Math.Max(minX, 0);
+            minY = Math.Max(minY, 0);
+            maxX = Math.Min(maxX, slideWidth);
+            maxY = Math.Min(maxY, slideHeight);
             rect = new Rect(
                 minY / slideHeight,
                 minX / slideWidth,

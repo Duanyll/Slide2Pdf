@@ -15,16 +15,28 @@ It works on Windows 10 and 11 with PowerPoint 2013 and later.
 1. Download the latest release from [Releases](https://github.com/duanyll/Slide2Pdf/releases).
 2. Unzip the downloaded file.
 3. Click `setup.exe` and follow the instructions to install the add-in.
-4. Open PowerPoint, the buttons should appear in the ribbon under the `Add-ins` tab.
-5. You may move the buttons to the `Home` tab or any other tab by right-clicking on the ribbon and selecting `Customize the Ribbon...`. Then, drag and drop the buttons to your desired location.
+4. Open PowerPoint, the buttons should appear in the ribbon to the right of the "Home" tab.
 
 ## 安装说明
 
 1. 从 [Releases](https://github.com/duanyll/Slide2Pdf/releases) 下载最新版本。
 2. 解压下载的文件。
 3. 双击 `setup.exe` 并按照说明安装插件。
-4. 打开 PowerPoint，按钮应该出现在 “加载项” 选项卡下。
-5. 您可以通过右键单击功能区并选择 “自定义功能区...” 将按钮移动到“开始”选项卡或者其他任何地方。
+4. 打开 PowerPoint，按钮应该出现在“开始”选项卡的右侧。
+
+## Changelog
+
+- v1.0.0.3:
+  - New feature: Remember the export location for each slide. Hold the `Shift` key while clicking the button to select a new location.
+  - Now the buttons are placed in the "Home" tab by default. You can move them to any tab you like.
+- v1.0.0.2: Initial release.
+
+## 更新说明
+
+- v1.0.0.3:
+  - 新功能：记住每张幻灯片的导出位置。按住 `Shift` 键单击按钮以选择新位置。
+  - 现在按钮默认放置在“开始”选项卡中。您可以将它们移动到任何选项卡。
+- v1.0.0.2: 初始版本。
 
 ## Build and debug
 

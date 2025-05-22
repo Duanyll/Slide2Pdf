@@ -45,8 +45,9 @@
             // tab1
             // 
             this.tab1.ControlId.ControlIdType = Microsoft.Office.Tools.Ribbon.RibbonControlIdType.Office;
+            this.tab1.ControlId.OfficeId = "TabHome";
             this.tab1.Groups.Add(this.group1);
-            this.tab1.Label = "TabAddIns";
+            this.tab1.Label = "TabHome";
             this.tab1.Name = "tab1";
             // 
             // group1
@@ -62,8 +63,10 @@
             this.btnExportFullSlide.Image = global::Slide2Pdf.Properties.Resources.document_pdf_512x512;
             this.btnExportFullSlide.Label = "Full Slide";
             this.btnExportFullSlide.Name = "btnExportFullSlide";
-            this.btnExportFullSlide.ScreenTip = "Save current slide as full PDF";
+            this.btnExportFullSlide.ScreenTip = "Export current slide as PDF";
             this.btnExportFullSlide.ShowImage = true;
+            this.btnExportFullSlide.SuperTip = "It remembers the output file for each slide. To export to another location, hold " +
+    "\"shift\" while clicking this button.";
             this.btnExportFullSlide.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnExportSlideToPdf_Click);
             // 
             // btnExportContent
@@ -72,8 +75,10 @@
             this.btnExportContent.Image = global::Slide2Pdf.Properties.Resources.crop_512x512;
             this.btnExportContent.Label = "Cropped Slide";
             this.btnExportContent.Name = "btnExportContent";
-            this.btnExportContent.ScreenTip = "Save current slide as PDF, cropping to visible content";
+            this.btnExportContent.ScreenTip = "Export current slide as PDF, cropping to visible content";
             this.btnExportContent.ShowImage = true;
+            this.btnExportContent.SuperTip = "It remembers the output file for each slide. To export to another location, hold " +
+    "\"shift\" while clicking this button.";
             this.btnExportContent.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnExportContent_Click);
             // 
             // Ribbon1

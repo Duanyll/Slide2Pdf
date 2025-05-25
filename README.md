@@ -17,12 +17,26 @@ It works on Windows 10 and 11 with PowerPoint 2013 and later.
 3. Click `setup.exe` and follow the instructions to install the add-in.
 4. Open PowerPoint, the buttons should appear in the ribbon to the right of the "Home" tab.
 
+You can also install the add-in with [Scoop](https://scoop.sh/):
+
+```powershell
+scoop bucket add duanyll https://github.com/duanyll/scoop-bucket
+scoop install duanyll/slide2pdf
+```
+
 ## 安装说明
 
 1. 从 [Releases](https://github.com/duanyll/Slide2Pdf/releases) 下载最新版本。
 2. 解压下载的文件。
 3. 双击 `setup.exe` 并按照说明安装插件。
 4. 打开 PowerPoint，按钮应该出现在“开始”选项卡的右侧。
+
+也可以使用 [Scoop](https://scoop.sh/) 安装插件：
+
+```powershell
+scoop bucket add duanyll https://github.com/duanyll/scoop-bucket
+scoop install duanyll/slide2pdf
+```
 
 ## Changelog
 

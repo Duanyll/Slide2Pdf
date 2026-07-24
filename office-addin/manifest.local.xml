@@ -26,6 +26,7 @@
     </Sets>
     <Methods>
       <Method Name="Document.getFileAsync" />
+      <Method Name="Document.getFilePropertiesAsync" />
     </Methods>
   </Requirements>
   <DefaultSettings>

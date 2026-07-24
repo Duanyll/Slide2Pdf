@@ -1,3 +1,5 @@
+import { runOfficeAsync } from "./officeAsync";
+
 const SLICE_SIZE = 4 * 1024 * 1024;
 
 export async function getPresentationPdf(): Promise<Uint8Array> {
@@ -47,18 +49,4 @@ async function getSlice(file: Office.File, index: number): Promise<Uint8Array> {
 
 function closeFile(file: Office.File): Promise<void> {
   return runOfficeAsync((callback) => file.closeAsync(callback));
-}
-
-function runOfficeAsync<T>(
-  operation: (callback: (result: Office.AsyncResult<T>) => void) => void,
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    operation((result) => {
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
-        resolve(result.value);
-      } else {
-        reject(new Error(result.error.message));
-      }
-    });
-  });
 }

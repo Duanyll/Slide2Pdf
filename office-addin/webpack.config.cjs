@@ -20,7 +20,10 @@ module.exports = async (_env, argv) => {
   }
 
   return {
-    entry: { taskpane: "./src/taskpane/taskpane.ts" },
+    entry: {
+      landing: "./src/landing/landing.ts",
+      taskpane: "./src/taskpane/taskpane.ts",
+    },
     devtool: argv.mode === "development" ? "source-map" : false,
     resolve: { extensions: [".ts", ".js"] },
     module: {
@@ -42,10 +45,16 @@ module.exports = async (_env, argv) => {
         template: "./src/taskpane/taskpane.html",
         chunks: ["taskpane"],
       }),
+      new HtmlWebpackPlugin({
+        filename: "index.html",
+        template: "./src/landing/index.html",
+        chunks: ["landing"],
+      }),
       new CopyWebpackPlugin({
         patterns: [
           { from: "assets", to: "assets" },
           { from: "manifest.xml", to: "manifest.xml" },
+          { from: "static", to: "." },
         ],
       }),
     ],

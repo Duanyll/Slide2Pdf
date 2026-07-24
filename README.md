@@ -44,7 +44,8 @@ scoop install duanyll/slide2pdf
 
 要求：macOS 上的 Microsoft 365 PowerPoint，并支持 PowerPointApi 1.10。
 
-生产清单安装后不需要 Node.js、本地证书或后台服务：
+生产清单安装后不需要 Node.js、本地证书或后台服务。其他 Mac 可以直接访问
+`https://slide2pdf.duanyll.com`，复制页面上的安装命令。仓库开发环境也可以使用：
 
 ```bash
 cd office-addin

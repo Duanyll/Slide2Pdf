@@ -365,3 +365,4 @@ FodyWeavers.xsd
 # Office.js add-in
 office-addin/node_modules/
 office-addin/dist/
+office-addin/.wrangler/

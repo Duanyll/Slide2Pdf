@@ -4,7 +4,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
-const source = join(scriptDirectory, "..", "manifest.xml");
+const manifestName = process.argv[2] || "manifest.xml";
+const source = join(scriptDirectory, "..", manifestName);
 const catalog = join(
   homedir(),
   "Library",

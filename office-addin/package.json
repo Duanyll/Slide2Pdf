@@ -6,13 +6,16 @@
   "scripts": {
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
+    "deploy": "npm run build && wrangler deploy",
     "dev-server": "webpack serve --mode development",
     "start": "webpack serve --mode development",
     "sideload": "node scripts/sideload.mjs",
+    "sideload:local": "node scripts/sideload.mjs manifest.local.xml",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "validate": "office-addin-manifest validate manifest.xml"
+    "validate": "office-addin-manifest validate manifest.xml",
+    "validate:local": "office-addin-manifest validate manifest.local.xml"
   },
   "dependencies": {
     "pdf-lib": "1.17.1"
@@ -29,6 +32,7 @@
     "ts-loader": "9.6.2",
     "typescript": "5.9.3",
     "vitest": "4.1.10",
+    "wrangler": "4.114.0",
     "webpack": "5.109.0",
     "webpack-cli": "7.2.1",
     "webpack-dev-server": "6.0.0"

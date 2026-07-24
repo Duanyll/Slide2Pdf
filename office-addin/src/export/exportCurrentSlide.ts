@@ -1,16 +1,15 @@
 import { transformPresentationPdf } from "../pdf/transformPresentationPdf";
 import { getCurrentSlide } from "../powerpoint/getCurrentSlide";
 import { getPresentationPdf } from "../powerpoint/getPresentationPdf";
-import { savePdf, type SavePdfResult } from "../save/savePdf";
+import { downloadPdf } from "../save/downloadPdf";
 
 export type ExportMode = "slide" | "content";
 export type ExportProgress = "reading-slide" | "creating-pdf" | "processing-pdf" | "saving";
 
 export async function exportCurrentSlide(
   mode: ExportMode,
-  forceNewPath: boolean,
   onProgress?: (progress: ExportProgress) => void,
-): Promise<SavePdfResult> {
+): Promise<string> {
   onProgress?.("reading-slide");
   const slide = await getCurrentSlide(mode === "content");
   onProgress?.("creating-pdf");
@@ -23,13 +22,10 @@ export async function exportCurrentSlide(
   );
 
   const title = sanitizeFileName(slide.presentationTitle || "Presentation");
+  const fileName = `${title}_Slide${slide.slideIndex + 1}.pdf`;
   onProgress?.("saving");
-  return savePdf(
-    output,
-    `${slide.presentationId}:${slide.slideId}`,
-    `${title}_Slide${slide.slideIndex + 1}.pdf`,
-    forceNewPath,
-  );
+  downloadPdf(output, fileName);
+  return fileName;
 }
 
 function sanitizeFileName(fileName: string): string {

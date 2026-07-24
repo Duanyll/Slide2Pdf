@@ -38,22 +38,20 @@ scoop bucket add duanyll https://github.com/duanyll/scoop-bucket
 scoop install duanyll/slide2pdf
 ```
 
-## macOS Office.js 版（开发预览）
+## macOS Office.js 版（纯前端预览）
 
-这一版不调用 Microsoft Graph，也不会把演示文稿上传到 Slide2Pdf 的服务器。它在 PowerPoint 内用 `Document.getFileAsync(Office.FileType.Pdf)` 取得整份 PDF，然后在任务窗格中抽取当前页；“导出并裁切内容”还会按当前页所有可见对象的边界设置 PDF 的 CropBox 和 TrimBox。PDF 内容保持矢量格式。
+这一版不调用 Microsoft Graph，也不会把演示文稿或 PDF 上传到服务器。Cloudflare Workers 只在 `https://slide2pdf.duanyll.com` 提供静态 HTML/JavaScript；PowerPoint 在任务窗格内用 `Document.getFileAsync(Office.FileType.Pdf)` 取得整份 PDF，然后在浏览器内存中抽取和裁切当前页。PDF 内容保持矢量格式。
 
 要求：macOS 上的 Microsoft 365 PowerPoint，并支持 PowerPointApi 1.10。
 
-首次安装和运行：
+生产清单安装后不需要 Node.js、本地证书或后台服务：
 
 ```bash
 cd office-addin
-npm install
 npm run sideload
-npm start
 ```
 
-第一次执行 `npm start` 时，macOS 可能会要求信任本地 HTTPS 开发证书。保持开发服务器运行，完全退出并重新打开 PowerPoint，然后在“开始”选项卡选择 `Slide2Pdf` → `导出 PDF`。
+完全退出并重新打开 PowerPoint，然后在“开始”选项卡选择 `Slide2Pdf` → `导出 PDF`。
 
 任务窗格提供两种操作：
 
@@ -62,7 +60,16 @@ npm start
 
 裁切边界与原 Windows 版保持一致，按当前幻灯片自身的顶层可见对象计算；母版/版式图形不参与边界计算，阴影或光晕等超出对象外框的效果可能被裁掉。
 
-在上述 macOS 本地开发模式中，第一次为某页导出时会弹出系统保存框，后续导出会直接覆盖同一个文件；按住 Shift 点击可以另存。保存由只监听 `localhost` 的辅助接口完成，不经过 Microsoft Graph 或外部服务器。脱离本地辅助接口部署时，插件会优先使用浏览器的文件选择 API，不支持时再退回到下载位置。
+导出通过 `Blob` 和 `<a download>` 触发 PowerPoint WebView 的下载行为。重复下载时系统可能自动修改文件名，不再记忆或覆盖原路径。macOS Office 使用 WKWebView，微软没有明确保证该环境一定接受 Blob PDF 下载，因此当前纯前端版仍需要在实际 PowerPoint 中验证；若 WKWebView 阻止下载，Office.js 没有另一个可靠的纯前端文件写入接口。
+
+开发和部署：
+
+```bash
+npm install
+npm run sideload:local  # 本地开发清单
+npm start               # 仅开发时需要
+npm run deploy          # Wrangler 部署静态资源
+```
 
 常用检查命令：
 
@@ -91,4 +98,4 @@ npm run validate
 
 For the Windows VSTO add-in, install the "Office/SharePoint Development" workload for Visual Studio 2022. Then open `Slide2Pdf.sln` in Visual Studio.
 
-For the macOS Office.js add-in, use the commands in the macOS section above. Its HTTPS server listens only on localhost. Presentation/PDF bytes are processed in the task pane and sent only to its loopback save endpoint when writing the selected local file; they aren't sent to Microsoft Graph or an external server.
+For the macOS Office.js add-in, use the commands in the macOS section above. The production add-in is static frontend code hosted at `slide2pdf.duanyll.com`; presentation and PDF bytes remain inside the PowerPoint task pane and aren't sent to Microsoft Graph, Cloudflare, or another server.

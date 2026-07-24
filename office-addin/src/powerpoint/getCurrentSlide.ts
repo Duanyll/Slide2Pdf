@@ -2,9 +2,7 @@ import type { NormalizedRect } from "../pdf/transformPresentationPdf";
 import { computeContentBounds } from "./contentBounds";
 
 export interface CurrentSlide {
-  presentationId: string;
   presentationTitle: string;
-  slideId: string;
   slideIndex: number;
   contentBounds?: NormalizedRect;
 }
@@ -16,8 +14,8 @@ export async function getCurrentSlide(
     const presentation = context.presentation;
     const selectedSlides = presentation.getSelectedSlides();
 
-    presentation.load("id,title");
-    selectedSlides.load("items/id,items/index");
+    presentation.load("title");
+    selectedSlides.load("items/index");
 
     if (includeContentBounds) {
       presentation.pageSetup.load("slideWidth,slideHeight");
@@ -51,9 +49,7 @@ export async function getCurrentSlide(
     }
 
     return {
-      presentationId: presentation.id,
       presentationTitle: presentation.title,
-      slideId: slide.id,
       slideIndex: slide.index,
       contentBounds,
     };

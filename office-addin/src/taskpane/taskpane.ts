@@ -38,38 +38,29 @@ Office.onReady((info) => {
   bindExportButton("#export-slide", "slide");
   bindExportButton("#export-content", "content");
 
-  const directSave =
-    window.location.hostname === "localhost" || "showSaveFilePicker" in window;
   const saveHint = document.querySelector<HTMLElement>("#save-hint");
   if (saveHint) {
-    saveHint.textContent = directSave
-      ? "首次选择文件后，同一页会自动覆盖保存；按住 Shift 点击可另存。"
-      : "PDF 会保存到浏览器下载位置；所有演示文稿内容仍只在本机处理。";
+    saveHint.textContent =
+      "PDF 会保存到浏览器下载位置；演示文稿和 PDF 内容不会上传。";
   }
 });
 
 function bindExportButton(selector: string, mode: ExportMode): void {
   const button = document.querySelector<HTMLButtonElement>(selector);
-  button?.addEventListener("click", async (event) => {
-    await runExport(mode, event.shiftKey);
+  button?.addEventListener("click", async () => {
+    await runExport(mode);
   });
 }
 
-async function runExport(mode: ExportMode, forceNewPath: boolean): Promise<void> {
+async function runExport(mode: ExportMode): Promise<void> {
   setBusy(true);
 
   try {
-    const result = await exportCurrentSlide(
+    const fileName = await exportCurrentSlide(
       mode,
-      forceNewPath,
       (progress) => showStatus(progressMessages[progress], "working"),
     );
-    showStatus(
-      result.method === "file"
-        ? `已保存 ${result.fileName}`
-        : `已下载 ${result.fileName}`,
-      "success",
-    );
+    showStatus(`已触发下载 ${fileName}`, "success");
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       showStatus("已取消。", "idle");

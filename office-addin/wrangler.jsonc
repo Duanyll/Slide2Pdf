@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "slide2pdf-office-addin",
+  "compatibility_date": "2026-07-24",
+  "workers_dev": false,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "none"
+  },
+  "routes": [
+    {
+      "pattern": "slide2pdf.duanyll.com",
+      "custom_domain": true
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
-const { createLocalSaveMiddleware } = require("./scripts/local-save.cjs");
 
 module.exports = async (_env, argv) => {
   const serving = Boolean(argv.env?.WEBPACK_SERVE);
@@ -10,13 +9,6 @@ module.exports = async (_env, argv) => {
     port: 3000,
     hot: true,
     headers: { "Access-Control-Allow-Origin": "*" },
-    setupMiddlewares(middlewares) {
-      middlewares.unshift({
-        name: "slide2pdf-local-save",
-        middleware: createLocalSaveMiddleware(),
-      });
-      return middlewares;
-    },
   };
 
   if (serving) {

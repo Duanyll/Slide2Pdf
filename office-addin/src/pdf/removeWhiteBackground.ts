@@ -1,9 +1,12 @@
 import {
   PDFArray,
+  PDFDict,
   PDFDocument,
   PDFName,
+  PDFNumber,
   PDFPage,
   PDFRawStream,
+  PDFStream,
   arrayAsString,
   decodePDFRawStream,
 } from "pdf-lib";
@@ -134,9 +137,13 @@ interface TextRange {
 }
 
 interface GraphicsState {
+  fillColorSpace?: ColorSpaceKind;
   fillIsWhite: boolean;
+  hasRestrictiveClip: boolean;
   usesDefaultCoordinates: boolean;
 }
+
+type ColorSpaceKind = "gray" | "rgb" | "cmyk";
 
 interface ContentTransform {
   content: string;
@@ -244,25 +251,56 @@ function readPdfOperations(content: string): PdfOperation[] {
 }
 
 function numericOperands(operation: PdfOperation): number[] {
-  return operation.operands
-    .map((token) => token.value)
-    .filter((value) => PDF_NUMBER_PATTERN.test(value))
-    .map(Number);
+  const values = operation.operands.map((token) => token.value);
+  if (values.some((value) => !PDF_NUMBER_PATTERN.test(value))) return [];
+  return values.map(Number);
 }
 
-function isWhiteColor(operator: string, components: number[]): boolean {
-  if (operator === "g") return components.length === 1 && components[0] === 1;
-  if (operator === "rg") {
+function isWhiteColor(colorSpace: ColorSpaceKind, components: number[]): boolean {
+  if (colorSpace === "gray") return components.length === 1 && components[0] === 1;
+  if (colorSpace === "rgb") {
     return components.length === 3 && components.every((value) => value === 1);
   }
-  if (operator === "k") {
-    return components.length === 4 && components.every((value) => value === 0);
+  return components.length === 4 && components.every((value) => value === 0);
+}
+
+function colorSpaceKindForComponents(
+  components: number | undefined,
+): ColorSpaceKind | undefined {
+  if (components === 1) return "gray";
+  if (components === 3) return "rgb";
+  if (components === 4) return "cmyk";
+  return undefined;
+}
+
+function getPageColorSpaces(page: PDFPage): Map<string, ColorSpaceKind> {
+  const colorSpaces = new Map<string, ColorSpaceKind>([
+    ["/DeviceGray", "gray"],
+    ["/DeviceRGB", "rgb"],
+    ["/DeviceCMYK", "cmyk"],
+  ]);
+  const resources = page.node.Resources();
+  const definitions = resources?.lookupMaybe(PDFName.of("ColorSpace"), PDFDict);
+  if (!definitions) return colorSpaces;
+
+  for (const [name] of definitions.entries()) {
+    const definition = definitions.lookup(name);
+    if (definition instanceof PDFName) {
+      const kind = colorSpaces.get(definition.asString());
+      if (kind) colorSpaces.set(name.asString(), kind);
+      continue;
+    }
+    if (!(definition instanceof PDFArray)) continue;
+
+    const family = definition.lookupMaybe(0, PDFName)?.asString();
+    if (family !== "/ICCBased") continue;
+    const profile = definition.lookupMaybe(1, PDFStream);
+    const components = profile?.dict.lookupMaybe(PDFName.of("N"), PDFNumber)?.asNumber();
+    const kind = colorSpaceKindForComponents(components);
+    if (kind) colorSpaces.set(name.asString(), kind);
   }
-  return (
-    (components.length === 1 && components[0] === 1) ||
-    (components.length === 3 && components.every((value) => value === 1)) ||
-    (components.length === 4 && components.every((value) => value === 0))
-  );
+
+  return colorSpaces;
 }
 
 function pathCoversPage(
@@ -278,12 +316,23 @@ function pathCoversPage(
     { x: page.x + page.width, y: page.y + page.height },
     { x: page.x, y: page.y + page.height },
   ];
-  return corners.every((corner) =>
-    points.some(
-      (point) =>
+  const cornerOrder = points.map((point) =>
+    corners.findIndex(
+      (corner) =>
         Math.abs(point.x - corner.x) <= tolerance &&
         Math.abs(point.y - corner.y) <= tolerance,
     ),
+  );
+  if (cornerOrder.some((index) => index < 0) || new Set(cornerOrder).size !== 4) {
+    return false;
+  }
+
+  const direction = (cornerOrder[1] - cornerOrder[0] + 4) % 4;
+  if (direction !== 1 && direction !== 3) return false;
+  return cornerOrder.every(
+    (corner, index) =>
+      (cornerOrder[(index + 1) % cornerOrder.length] - corner + 4) % 4 ===
+      direction,
   );
 }
 
@@ -304,11 +353,14 @@ function removeRanges(content: string, ranges: TextRange[]): string {
 function removeLeadingPageSizedWhiteFills(
   content: string,
   page: { x: number; y: number; width: number; height: number },
+  colorSpaces: ReadonlyMap<string, ColorSpaceKind>,
 ): ContentTransform {
   const ranges: TextRange[] = [];
   const graphicsStack: GraphicsState[] = [];
   let graphics: GraphicsState = {
+    fillColorSpace: "gray",
     fillIsWhite: false,
+    hasRestrictiveClip: false,
     usesDefaultCoordinates: true,
   };
   let pathPoints: Point[] = [];
@@ -343,8 +395,20 @@ function removeLeadingPageSizedWhiteFills(
       graphics.usesDefaultCoordinates &&= isIdentity;
       continue;
     }
-    if (["g", "rg", "k", "sc", "scn"].includes(operator)) {
-      graphics.fillIsWhite = isWhiteColor(operator, operands);
+    if (operator === "cs") {
+      graphics.fillColorSpace = colorSpaces.get(operation.operands.at(-1)?.value ?? "");
+      graphics.fillIsWhite = false;
+      continue;
+    }
+    if (operator === "g" || operator === "rg" || operator === "k") {
+      graphics.fillColorSpace = operator === "g" ? "gray" : operator === "rg" ? "rgb" : "cmyk";
+      graphics.fillIsWhite = isWhiteColor(graphics.fillColorSpace, operands);
+      continue;
+    }
+    if (operator === "sc" || operator === "scn") {
+      graphics.fillIsWhite =
+        graphics.fillColorSpace !== undefined &&
+        isWhiteColor(graphics.fillColorSpace, operands);
       continue;
     }
 
@@ -376,6 +440,14 @@ function removeLeadingPageSizedWhiteFills(
       continue;
     }
     if (operator === "n") {
+      if (
+        pathWillClip &&
+        (!graphics.usesDefaultCoordinates ||
+          !pathIsSupported ||
+          !pathCoversPage(pathPoints, page))
+      ) {
+        graphics.hasRestrictiveClip = true;
+      }
       resetPath();
       continue;
     }
@@ -385,6 +457,7 @@ function removeLeadingPageSizedWhiteFills(
       const isBackground =
         isFill &&
         graphics.fillIsWhite &&
+        !graphics.hasRestrictiveClip &&
         graphics.usesDefaultCoordinates &&
         pathIsSupported &&
         !pathWillClip &&
@@ -432,7 +505,11 @@ export function removeWhiteBackground(pdf: PDFDocument, page: PDFPage): void {
   const content = decodePageContents(page);
   if (content === undefined) return;
 
-  const result = removeLeadingPageSizedWhiteFills(content, page.getMediaBox());
+  const result = removeLeadingPageSizedWhiteFills(
+    content,
+    page.getMediaBox(),
+    getPageColorSpaces(page),
+  );
   if (result.removed === 0) return;
 
   const replacement = pdf.context.flateStream(result.content);

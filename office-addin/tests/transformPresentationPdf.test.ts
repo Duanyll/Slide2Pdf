@@ -32,7 +32,7 @@ async function createPowerPointStylePdf(): Promise<Uint8Array> {
   return createPdfWithContent(
     [
       "q",
-      "/Cs1 cs",
+      "/DeviceRGB cs",
       "1 1 1 sc",
       "0 180 m",
       "320 180 l",
@@ -143,6 +143,65 @@ describe("transformPresentationPdf", () => {
     const content = getPageContent(await PDFDocument.load(result));
     expect(content).not.toContain("0 0 320 180 re");
     expect(content).toContain("0 180 m\n320 180 l\n320 0 l\n0 0 l");
+  });
+
+  it("preserves a page-sized fill when its color space cannot be proven white", async () => {
+    const source = await createPdfWithContent(
+      [
+        "/Pattern cs",
+        "1 1 1 scn",
+        "0 0 320 180 re",
+        "f",
+      ].join("\n"),
+    );
+
+    const result = await transformPresentationPdf(source, 0, {
+      transparentBackground: true,
+    });
+
+    const content = getPageContent(await PDFDocument.load(result));
+    expect(content).toContain("0 0 320 180 re");
+  });
+
+  it("preserves a page-sized white fill restricted by a smaller clipping path", async () => {
+    const source = await createPdfWithContent(
+      [
+        "0 0 160 180 re",
+        "W",
+        "n",
+        "1 1 1 rg",
+        "0 0 320 180 re",
+        "f",
+      ].join("\n"),
+    );
+
+    const result = await transformPresentationPdf(source, 0, {
+      transparentBackground: true,
+    });
+
+    const content = getPageContent(await PDFDocument.load(result));
+    expect(content).toContain("0 0 320 180 re");
+  });
+
+  it("preserves a self-intersecting white path whose bounds match the page", async () => {
+    const source = await createPdfWithContent(
+      [
+        "1 1 1 rg",
+        "0 0 m",
+        "320 180 l",
+        "320 0 l",
+        "0 180 l",
+        "h",
+        "f",
+      ].join("\n"),
+    );
+
+    const result = await transformPresentationPdf(source, 0, {
+      transparentBackground: true,
+    });
+
+    const content = getPageContent(await PDFDocument.load(result));
+    expect(content).toContain("0 0 m\n320 180 l\n320 0 l\n0 180 l");
   });
 
   it("rejects a slide index that is not present in the generated PDF", async () => {

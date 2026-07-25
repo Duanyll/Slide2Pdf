@@ -25,7 +25,7 @@ export async function getCurrentSlide(
 
     const slide = selectedSlides.items[0];
     if (!slide) {
-      throw new Error("No active slide was found.");
+      throw new Error("没有找到当前幻灯片。请先选择一页，再重新导出。");
     }
 
     let contentBounds: NormalizedRect | undefined;

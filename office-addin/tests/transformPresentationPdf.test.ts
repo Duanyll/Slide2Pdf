@@ -208,7 +208,7 @@ describe("transformPresentationPdf", () => {
     const source = await createPresentationPdf();
 
     await expect(transformPresentationPdf(source, 3)).rejects.toThrowError(
-      "Slide 4 is not present in the generated PDF.",
+      "生成的 PDF 中没有第 4 页。请确认当前幻灯片仍然存在，然后重试。",
     );
   });
 });

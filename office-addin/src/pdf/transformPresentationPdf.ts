@@ -26,7 +26,7 @@ export async function transformPresentationPdf(
     slideIndex >= source.getPageCount()
   ) {
     throw new Error(
-      `Slide ${slideIndex + 1} is not present in the generated PDF.`,
+      `生成的 PDF 中没有第 ${slideIndex + 1} 页。请确认当前幻灯片仍然存在，然后重试。`,
     );
   }
 

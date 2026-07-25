@@ -36,8 +36,7 @@ h1 {
 }
 
 header p,
-.hint,
-footer {
+.hint {
   color: #666;
 }
 
@@ -130,6 +129,10 @@ button small {
   line-height: 1.4;
 }
 
+#status[hidden] {
+  display: none;
+}
+
 #status[data-state="working"] {
   color: #674500;
   background: #fff1c2;
@@ -145,12 +148,6 @@ button small {
   background: #fde2e2;
 }
 
-footer {
-  margin-top: 18px;
-  font-size: 11px;
-  line-height: 1.5;
-}
-
 @media (prefers-color-scheme: dark) {
   body {
     color: #f2f2f2;
@@ -158,8 +155,7 @@ footer {
   }
 
   header p,
-  .hint,
-  footer {
+  .hint {
     color: #b7b7b7;
   }
 

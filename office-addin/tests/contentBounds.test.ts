@@ -39,6 +39,8 @@ describe("computeContentBounds", () => {
         [{ left: 10, top: 10, width: 20, height: 20, visible: false }],
         { width: 1000, height: 500 },
       ),
-    ).toThrowError("No visible shapes were found on the current slide.");
+    ).toThrowError(
+      "当前页没有可裁切的可见对象。请选择“导出整页”，或添加可见对象后重试。",
+    );
   });
 });

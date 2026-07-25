@@ -61,24 +61,24 @@
             // 
             this.btnExportFullSlide.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.btnExportFullSlide.Image = global::Slide2Pdf.Properties.Resources.document_pdf_512x512;
-            this.btnExportFullSlide.Label = "Full Slide";
+            this.btnExportFullSlide.Label = "Export Full Slide";
             this.btnExportFullSlide.Name = "btnExportFullSlide";
-            this.btnExportFullSlide.ScreenTip = "Export current slide as PDF";
+            this.btnExportFullSlide.ScreenTip = "Export the current slide at full size";
             this.btnExportFullSlide.ShowImage = true;
-            this.btnExportFullSlide.SuperTip = "It remembers the output file for each slide. To export to another location, hold " +
-    "\"shift\" while clicking this button.";
+            this.btnExportFullSlide.SuperTip = "Slide2Pdf remembers this slide's export location. Hold Shift while clicking " +
+    "to choose a different location.";
             this.btnExportFullSlide.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnExportSlideToPdf_Click);
             // 
             // btnExportContent
             // 
             this.btnExportContent.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
             this.btnExportContent.Image = global::Slide2Pdf.Properties.Resources.crop_512x512;
-            this.btnExportContent.Label = "Cropped Slide";
+            this.btnExportContent.Label = "Crop to Content";
             this.btnExportContent.Name = "btnExportContent";
-            this.btnExportContent.ScreenTip = "Export current slide as PDF, cropping to visible content";
+            this.btnExportContent.ScreenTip = "Export the current slide, cropped to visible content";
             this.btnExportContent.ShowImage = true;
-            this.btnExportContent.SuperTip = "It remembers the output file for each slide. To export to another location, hold " +
-    "\"shift\" while clicking this button.";
+            this.btnExportContent.SuperTip = "Slide2Pdf remembers this slide's export location. Hold Shift while clicking " +
+    "to choose a different location.";
             this.btnExportContent.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnExportContent_Click);
             // 
             // Ribbon1

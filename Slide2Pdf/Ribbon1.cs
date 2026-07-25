@@ -114,7 +114,7 @@ namespace Slide2Pdf
 
             if (presentation == null || currentSlide == null)
             {
-                MessageBox.Show("No active presentation or slide to export.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Open a presentation and select a slide, then try again.", "Nothing to Export", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -165,7 +165,7 @@ namespace Slide2Pdf
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to export slide: {ex.Message}", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Couldn't export this slide.\n\n{ex.Message}", "Export Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 // Optionally, clear the stored path if export failed, to force re-selection next time.
                 // if (currentSlide != null) slideSavePaths.Remove(currentSlide.SlideID);
                 return false;
@@ -177,7 +177,7 @@ namespace Slide2Pdf
             bool forceNewPath = (Control.ModifierKeys & Keys.Shift) == Keys.Shift;
             if (ExportCurrentSlideToFile(forceNewPath, out string outputPath))
             {
-                MessageBox.Show("Slide exported successfully to: " + outputPath, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("PDF exported to:\n" + outputPath, "PDF Exported", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             // If ExportCurrentSlideToFile returns false, it (or its sub-methods) should have already shown an error or handled cancellation.
         }
@@ -188,7 +188,7 @@ namespace Slide2Pdf
 
             if (!addIn.GetCurrentSlideContentBoundingRect(out Rect rect)) // Replace var with your actual Rect type
             {
-                MessageBox.Show("No visible shapes found on the current slide, or failed to calculate content bounds.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("This slide has no visible content to crop. Use Export Full Slide, or add visible content and try again.", "Nothing to Crop", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -198,11 +198,11 @@ namespace Slide2Pdf
                 try
                 {
                     addIn.CropPdf(outputPath, rect);
-                    MessageBox.Show("Slide content exported and cropped successfully to: " + outputPath, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Cropped PDF exported to:\n" + outputPath, "PDF Exported", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"PDF was exported, but failed to crop: {ex.Message}\nFile: {outputPath}", "Cropping Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"The full slide was exported, but it couldn't be cropped.\n\nFile: {outputPath}\nError: {ex.Message}", "Couldn't Crop PDF", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

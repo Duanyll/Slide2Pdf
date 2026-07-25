@@ -10,7 +10,7 @@
   <ProviderName>Duanyll</ProviderName>
   <DefaultLocale>zh-CN</DefaultLocale>
   <DisplayName DefaultValue="Slide2Pdf (Local)" />
-  <Description DefaultValue="在本机把 PowerPoint 当前幻灯片导出为矢量 PDF，并按可见内容裁切。" />
+  <Description DefaultValue="在本机将当前幻灯片导出为矢量 PDF，可选择保留整页或按内容裁切。" />
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png" />
   <SupportUrl DefaultValue="https://github.com/Duanyll/Slide2Pdf" />
@@ -96,8 +96,8 @@
         <bt:String id="Button.Label" DefaultValue="导出 PDF" />
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="从开始选项卡打开 Slide2Pdf，导出当前幻灯片。" />
-        <bt:String id="Button.Tooltip" DefaultValue="打开 Slide2Pdf，在本机导出当前幻灯片为 PDF。" />
+        <bt:String id="GetStarted.Description" DefaultValue="在“开始”选项卡中点击“加载项”，选择 Slide2Pdf 后导出当前幻灯片。" />
+        <bt:String id="Button.Tooltip" DefaultValue="打开 Slide2Pdf，将当前幻灯片导出为矢量 PDF。" />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

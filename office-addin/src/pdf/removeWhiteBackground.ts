@@ -494,7 +494,7 @@ function decodePageContents(page: PDFPage): string | undefined {
   return streams
     .map((stream) => {
       if (!(stream instanceof PDFRawStream)) {
-        throw new Error("PowerPoint PDF 使用了无法处理的页面内容格式。");
+        throw new Error("无法将背景改为透明。请关闭“透明背景”后重新导出。");
       }
       return arrayAsString(decodePDFRawStream(stream).decode());
     })

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Slide2Pdf：在 macOS PowerPoint 中把当前幻灯片导出并裁切为矢量 PDF。"
+      content="Slide2Pdf：在 macOS 版 PowerPoint 中将当前幻灯片导出为矢量 PDF，可选择保留整页或按内容裁切。"
     />
     <meta name="theme-color" content="#f5f1ea" />
     <link rel="icon" type="image/png" href="/assets/icon-32.png" />
@@ -33,21 +33,21 @@
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow"><span></span> PowerPoint for macOS</p>
-          <h1>把这一页，干净地<br />带出 PowerPoint。</h1>
+          <h1>把当前幻灯片，直接<br />导出成矢量 PDF。</h1>
           <p class="hero-description">
-            导出当前幻灯片为矢量 PDF，也可以自动裁到可见内容边界。无需逐页另存，
-            无需 Microsoft Graph，也无需在 Mac 上常驻一个后台服务。
+            保留整页，或自动裁到可见对象的边界。演示文稿和导出的 PDF 都在
+            PowerPoint 内处理，不会上传。
           </p>
           <div class="hero-actions">
             <a class="button primary" href="#install">安装到 PowerPoint</a>
             <a class="button secondary" href="/manifest.xml" download="Slide2Pdf.xml">
-              下载清单
+              下载 XML 清单
             </a>
           </div>
           <ul class="feature-list" aria-label="功能特点">
             <li>保留矢量</li>
-            <li>本机处理</li>
-            <li>一页一份</li>
+            <li>只导出当前页</li>
+            <li>文件不上传</li>
           </ul>
         </div>
 
@@ -82,10 +82,9 @@
       <section class="install-section" id="install">
         <div class="section-heading">
           <p class="section-number">01 / INSTALL</p>
-          <h2>一分钟装好。</h2>
+          <h2>在 Mac 上安装</h2>
           <p>
-            适用于装有 Microsoft 365 PowerPoint 的 Mac。开始前，请先完全退出
-            PowerPoint。
+            需要 Microsoft 365 PowerPoint。安装前，请先完全退出 PowerPoint。
           </p>
         </div>
 
@@ -127,34 +126,33 @@ curl -fsSL https://slide2pdf.duanyll.com/manifest.xml \
           <li>
             <span>3</span>
             <div>
-              <h3>找到 Slide2Pdf</h3>
-              <p>选择“加载项 → Slide2Pdf”，然后开始导出。</p>
+              <h3>打开 Slide2Pdf</h3>
+              <p>点击“加载项”，选择 Slide2Pdf，然后开始导出。</p>
             </div>
           </li>
         </ol>
 
         <p class="manual-install">
-          不想使用终端？
-          <a href="/manifest.xml" download="Slide2Pdf.xml">下载 XML 清单</a>
-          后手工放入 PowerPoint 的 <code>wef</code> 目录。
+          不想使用终端？可以<a href="/manifest.xml" download="Slide2Pdf.xml">下载 XML 清单</a>，
+          再将它放入
+          <code>~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/wef/</code>。
         </p>
       </section>
 
       <section class="details-section">
         <div class="detail-card">
           <p class="section-number">02 / LOCAL</p>
-          <h2>你的幻灯片不离开 PowerPoint。</h2>
+          <h2>演示文稿和 PDF 不会上传。</h2>
           <p>
-            服务器只提供插件的静态 HTML 和 JavaScript。PowerPoint 在任务窗格内生成整份
-            PDF，Slide2Pdf 在本机内存中抽取当前页并裁切，然后触发系统下载。
+            转换在 PowerPoint 任务窗格内完成；服务器只负责加载插件页面。
           </p>
         </div>
         <div class="detail-card accent-card">
           <p class="section-number">03 / UPDATE</p>
-          <h2>以后更新，不用重装。</h2>
+          <h2>大多数更新会自动生效。</h2>
           <p>
-            功能更新会直接部署到网页端。通常关闭再打开任务窗格就能使用新版；只有清单权限或
-            PowerPoint 按钮发生变化时，才需要重新运行安装命令。
+            重新打开任务窗格即可加载大多数更新。清单权限或 PowerPoint 按钮发生变化时，
+            才需要重新运行安装命令。
           </p>
         </div>
       </section>
@@ -163,9 +161,9 @@ curl -fsSL https://slide2pdf.duanyll.com/manifest.xml \
     <footer class="site-footer">
       <div>
         <strong>Slide2Pdf</strong>
-        <span>Open source · MIT</span>
+        <span>开源 · MIT 许可证</span>
       </div>
-      <a href="https://github.com/Duanyll/Slide2Pdf">Source on GitHub ↗</a>
+      <a href="https://github.com/Duanyll/Slide2Pdf">在 GitHub 查看源码 ↗</a>
     </footer>
   </body>
 </html>

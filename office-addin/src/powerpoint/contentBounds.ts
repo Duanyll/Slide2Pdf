@@ -27,7 +27,9 @@ export function computeContentBounds(
   );
 
   if (visibleShapes.length === 0) {
-    throw new Error("No visible shapes were found on the current slide.");
+    throw new Error(
+      "当前页没有可裁切的可见对象。请选择“导出整页”，或添加可见对象后重试。",
+    );
   }
 
   const left = Math.max(

@@ -35,6 +35,5 @@ export async function exportCurrentSlide(
   const title = getPresentationBaseName(slide.presentationTitle, documentUrl);
   const fileName = `${title}_Slide${slide.slideIndex + 1}.pdf`;
   onProgress?.("saving");
-  downloadPdf(output, fileName);
-  return fileName;
+  return downloadPdf(output, fileName);
 }

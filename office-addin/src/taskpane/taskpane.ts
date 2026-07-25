@@ -8,9 +8,9 @@ import {
 
 const progressMessages: Record<ExportProgress, string> = {
   "reading-slide": "正在读取当前幻灯片…",
-  "creating-pdf": "正在让 PowerPoint 生成整份 PDF…",
-  "processing-pdf": "正在抽取并处理当前页…",
-  saving: "正在保存 PDF…",
+  "creating-pdf": "正在生成 PDF…",
+  "processing-pdf": "正在处理当前页…",
+  saving: "正在准备下载…",
 };
 
 Office.onReady((info) => {
@@ -28,7 +28,7 @@ Office.onReady((info) => {
   );
   const supportsPdf = Office.context.requirements.isSetSupported("File", "1.1");
   if (!supportsPowerPoint || !supportsPdf) {
-    showStatus("当前 PowerPoint 版本缺少导出所需的 Office.js API。", "error");
+    showStatus("当前 PowerPoint 版本不支持导出。请更新 PowerPoint 后重试。", "error");
     return;
   }
 
@@ -41,7 +41,7 @@ Office.onReady((info) => {
   const saveHint = document.querySelector<HTMLElement>("#save-hint");
   if (saveHint) {
     saveHint.textContent =
-      "PDF 会保存到浏览器下载位置；演示文稿和 PDF 内容不会上传。";
+      "文件名会自动添加递增序号；演示文稿和 PDF 不会上传。";
   }
 });
 
@@ -61,12 +61,13 @@ async function runExport(mode: ExportMode): Promise<void> {
       { transparentBackground: isTransparentBackgroundEnabled() },
       (progress) => showStatus(progressMessages[progress], "working"),
     );
-    showStatus(`已触发下载 ${fileName}`, "success");
+    showStatus(`已开始下载：${fileName}`, "success");
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       showStatus("已取消。", "idle");
     } else {
-      showStatus(error instanceof Error ? error.message : String(error), "error");
+      const message = error instanceof Error ? error.message : String(error);
+      showStatus(`导出失败：${message}`, "error");
     }
   } finally {
     setBusy(false);
@@ -97,6 +98,7 @@ function showStatus(
 ): void {
   const status = document.querySelector<HTMLElement>("#status");
   if (!status) return;
+  status.removeAttribute("hidden");
   status.textContent = message;
   status.dataset.state = state;
 }

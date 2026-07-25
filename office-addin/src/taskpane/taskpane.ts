@@ -58,6 +58,7 @@ async function runExport(mode: ExportMode): Promise<void> {
   try {
     const fileName = await exportCurrentSlide(
       mode,
+      { transparentBackground: isTransparentBackgroundEnabled() },
       (progress) => showStatus(progressMessages[progress], "working"),
     );
     showStatus(`已触发下载 ${fileName}`, "success");
@@ -78,6 +79,16 @@ function setBusy(busy: boolean): void {
     .forEach((button) => {
       button.disabled = busy;
     });
+  const transparentBackground =
+    document.querySelector<HTMLInputElement>("#transparent-background");
+  if (transparentBackground) transparentBackground.disabled = busy;
+}
+
+function isTransparentBackgroundEnabled(): boolean {
+  return (
+    document.querySelector<HTMLInputElement>("#transparent-background")
+      ?.checked ?? false
+  );
 }
 
 function showStatus(

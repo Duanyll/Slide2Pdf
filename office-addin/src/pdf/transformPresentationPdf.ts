@@ -1,5 +1,7 @@
 import { PDFDocument } from "pdf-lib";
 
+import { removeWhiteBackground } from "./removeWhiteBackground";
+
 export interface NormalizedRect {
   left: number;
   top: number;
@@ -7,10 +9,15 @@ export interface NormalizedRect {
   height: number;
 }
 
+export interface TransformPresentationPdfOptions {
+  crop?: NormalizedRect;
+  transparentBackground?: boolean;
+}
+
 export async function transformPresentationPdf(
   presentationPdf: Uint8Array,
   slideIndex: number,
-  crop?: NormalizedRect,
+  options: TransformPresentationPdfOptions = {},
 ): Promise<Uint8Array> {
   const source = await PDFDocument.load(presentationPdf);
   if (
@@ -28,7 +35,12 @@ export async function transformPresentationPdf(
 
   output.addPage(page);
 
-  if (crop) {
+  if (options.transparentBackground) {
+    removeWhiteBackground(output, page);
+  }
+
+  if (options.crop) {
+    const crop = options.crop;
     const { width: pageWidth, height: pageHeight } = page.getSize();
     const x = crop.left * pageWidth;
     const y = (1 - crop.top - crop.height) * pageHeight;

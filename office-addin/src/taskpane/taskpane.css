@@ -84,6 +84,38 @@ button small {
   opacity: 0.78;
 }
 
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #d4d4d6;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.option input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: #d24726;
+}
+
+.option span {
+  display: grid;
+  gap: 3px;
+}
+
+.option strong {
+  font-size: 14px;
+}
+
+.option small {
+  color: #666;
+  line-height: 1.4;
+}
+
 .hint {
   font-size: 12px;
   line-height: 1.5;
@@ -134,6 +166,15 @@ footer {
   button {
     color: #f2f2f2;
     background: #333;
+  }
+
+  .option {
+    background: #333;
+    border-color: #555;
+  }
+
+  .option small {
+    color: #b7b7b7;
   }
 
   #status {

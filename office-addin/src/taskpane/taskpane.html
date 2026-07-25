@@ -29,6 +29,14 @@
           <small>裁到当前页所有可见对象的边界</small>
         </button>
 
+        <label class="option" for="transparent-background">
+          <input id="transparent-background" type="checkbox" />
+          <span>
+            <strong>透明背景</strong>
+            <small>移除 PowerPoint 生成的整页纯白背景</small>
+          </span>
+        </label>
+
         <p id="save-hint" class="hint"></p>
       </section>
 
@@ -36,7 +44,9 @@
         就绪
       </p>
 
-      <footer>本地流程：PowerPoint 生成整份 PDF → 抽取当前页 → 裁切</footer>
+      <footer>
+        本地流程：PowerPoint 生成整份 PDF → 抽取当前页 → 可选透明背景与裁切
+      </footer>
     </main>
   </body>
 </html>

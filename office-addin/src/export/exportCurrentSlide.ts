@@ -8,8 +8,13 @@ import { getPresentationBaseName } from "./presentationFileName";
 export type ExportMode = "slide" | "content";
 export type ExportProgress = "reading-slide" | "creating-pdf" | "processing-pdf" | "saving";
 
+export interface ExportOptions {
+  transparentBackground?: boolean;
+}
+
 export async function exportCurrentSlide(
   mode: ExportMode,
+  options: ExportOptions = {},
   onProgress?: (progress: ExportProgress) => void,
 ): Promise<string> {
   onProgress?.("reading-slide");
@@ -21,7 +26,10 @@ export async function exportCurrentSlide(
   const output = await transformPresentationPdf(
     presentationPdf,
     slide.slideIndex,
-    slide.contentBounds,
+    {
+      crop: slide.contentBounds,
+      transparentBackground: options.transparentBackground,
+    },
   );
 
   const title = getPresentationBaseName(slide.presentationTitle, documentUrl);

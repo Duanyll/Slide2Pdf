@@ -18,34 +18,38 @@ async function createPresentationPdf(): Promise<Uint8Array> {
   return pdf.save();
 }
 
-async function createPowerPointStylePdf(): Promise<Uint8Array> {
+async function createPdfWithContent(content: string): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([320, 180]);
-  const content = [
-    "q",
-    "/Cs1 cs",
-    "1 1 1 sc",
-    "0 180 m",
-    "320 180 l",
-    "320 0 l",
-    "0 0 l",
-    "h",
-    "f",
-    "0.2 0.7 0.3 sc",
-    "40 140 m",
-    "120 140 l",
-    "120 60 l",
-    "40 60 l",
-    "h",
-    "f",
-    "Q",
-  ].join("\n");
-
   page.node.set(
     PDFName.of("Contents"),
     pdf.context.register(pdf.context.flateStream(content)),
   );
   return pdf.save();
+}
+
+async function createPowerPointStylePdf(): Promise<Uint8Array> {
+  return createPdfWithContent(
+    [
+      "q",
+      "/Cs1 cs",
+      "1 1 1 sc",
+      "0 180 m",
+      "320 180 l",
+      "320 0 l",
+      "0 0 l",
+      "h",
+      "f",
+      "0.2 0.7 0.3 sc",
+      "40 140 m",
+      "120 140 l",
+      "120 60 l",
+      "40 60 l",
+      "h",
+      "f",
+      "Q",
+    ].join("\n"),
+  );
 }
 
 function getPageContent(pdf: PDFDocument): string {
@@ -111,6 +115,34 @@ describe("transformPresentationPdf", () => {
     const content = getPageContent(await PDFDocument.load(result));
     expect(content).not.toContain("0 180 m\n320 180 l\n320 0 l\n0 0 l");
     expect(content).toContain("40 140 m\n120 140 l\n120 60 l\n40 60 l");
+  });
+
+  it("removes only leading white page fills expressed with common PDF operators", async () => {
+    const source = await createPdfWithContent(
+      [
+        "1 1 1 rg",
+        "0 0 320 180 re",
+        "f",
+        "0.2 0.7 0.3 rg",
+        "40 60 80 80 re",
+        "f",
+        "1 1 1 sc",
+        "0 180 m",
+        "320 180 l",
+        "320 0 l",
+        "0 0 l",
+        "h",
+        "f",
+      ].join("\n"),
+    );
+
+    const result = await transformPresentationPdf(source, 0, {
+      transparentBackground: true,
+    });
+
+    const content = getPageContent(await PDFDocument.load(result));
+    expect(content).not.toContain("0 0 320 180 re");
+    expect(content).toContain("0 180 m\n320 180 l\n320 0 l\n0 0 l");
   });
 
   it("rejects a slide index that is not present in the generated PDF", async () => {

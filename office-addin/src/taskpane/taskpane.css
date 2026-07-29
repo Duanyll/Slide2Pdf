@@ -9,12 +9,17 @@
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   margin: 0;
   color: #202124;
   background: #f7f7f8;
 }
 
 main {
+  width: 100%;
+  max-width: 100%;
   padding: 20px 16px;
 }
 
@@ -42,6 +47,8 @@ header p,
 
 #app {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   gap: 12px;
 }
 
@@ -120,6 +127,124 @@ button small {
   line-height: 1.5;
 }
 
+.overleaf-panel {
+  min-width: 0;
+  margin-top: 8px;
+  border: 1px solid #d4d4d6;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.overleaf-panel > summary {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.overleaf-panel > summary span {
+  display: inline;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.overleaf-panel > summary small {
+  padding-left: 19px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.overleaf-form {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  padding: 4px 14px 14px;
+  border-top: 1px solid #e3e3e5;
+}
+
+.current-slide {
+  padding-top: 12px;
+  color: #555;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.field > span {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.field > small,
+.remember-option small {
+  color: #666;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.field input,
+.field select {
+  min-width: 0;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #b8b8ba;
+  border-radius: 6px;
+  color: #202124;
+  background: #fff;
+  font: inherit;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: 2px solid rgba(210, 71, 38, 0.3);
+  outline-offset: 1px;
+  border-color: #d24726;
+}
+
+.remember-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.remember-option input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: #d24726;
+}
+
+.remember-option span {
+  display: grid;
+  gap: 2px;
+}
+
+.remember-option strong {
+  font-size: 12px;
+}
+
+.overleaf-actions {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 8px;
+}
+
+.overleaf-actions button {
+  display: block;
+  min-width: 0;
+  padding: 10px;
+  text-align: center;
+  white-space: normal;
+}
+
 #status {
   min-height: 40px;
   margin-top: 20px;
@@ -148,6 +273,12 @@ button small {
   background: #fde2e2;
 }
 
+@media (max-width: 340px) {
+  .overleaf-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     color: #f2f2f2;
@@ -167,6 +298,29 @@ button small {
   .option {
     background: #333;
     border-color: #555;
+  }
+
+  .overleaf-panel {
+    background: #333;
+    border-color: #555;
+  }
+
+  .overleaf-panel > summary small,
+  .current-slide,
+  .field > small,
+  .remember-option small {
+    color: #b7b7b7;
+  }
+
+  .overleaf-form {
+    border-color: #555;
+  }
+
+  .field input,
+  .field select {
+    color: #f2f2f2;
+    background: #252526;
+    border-color: #666;
   }
 
   .option small {

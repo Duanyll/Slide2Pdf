@@ -5,6 +5,7 @@ import {
   type ExportMode,
   type ExportProgress,
 } from "../export/exportCurrentSlide";
+import { initializeOverleafPanel } from "./overleafPanel";
 
 const progressMessages: Record<ExportProgress, string> = {
   "reading-slide": "正在读取当前幻灯片…",
@@ -37,11 +38,18 @@ Office.onReady((info) => {
 
   bindExportButton("#export-slide", "slide");
   bindExportButton("#export-content", "content");
+  initializeOverleafPanel({
+    isTransparentBackgroundEnabled,
+    setBusy,
+    showPdfProgress: (progress) =>
+      showStatus(progressMessages[progress], "working"),
+    showStatus,
+  });
 
   const saveHint = document.querySelector<HTMLElement>("#save-hint");
   if (saveHint) {
     saveHint.textContent =
-      "文件名会自动添加递增序号；演示文稿和 PDF 不会上传。";
+      "下载文件会自动添加递增序号；只有点击“生成并推送”才会连接 Overleaf。";
   }
 });
 
@@ -76,13 +84,12 @@ async function runExport(mode: ExportMode): Promise<void> {
 
 function setBusy(busy: boolean): void {
   document
-    .querySelectorAll<HTMLButtonElement>("button[data-export]")
-    .forEach((button) => {
-      button.disabled = busy;
+    .querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>(
+      "#app button, #app input, #app select",
+    )
+    .forEach((control) => {
+      control.disabled = busy;
     });
-  const transparentBackground =
-    document.querySelector<HTMLInputElement>("#transparent-background");
-  if (transparentBackground) transparentBackground.disabled = busy;
 }
 
 function isTransparentBackgroundEnabled(): boolean {

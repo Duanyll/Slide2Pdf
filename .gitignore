@@ -366,3 +366,6 @@ FodyWeavers.xsd
 office-addin/node_modules/
 office-addin/dist/
 office-addin/.wrangler/
+
+# Local secrets
+.env

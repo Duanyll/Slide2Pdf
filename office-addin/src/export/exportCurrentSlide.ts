@@ -12,11 +12,27 @@ export interface ExportOptions {
   transparentBackground?: boolean;
 }
 
+export interface CurrentSlidePdf {
+  data: Uint8Array;
+  slideId: string;
+  suggestedFileName: string;
+}
+
 export async function exportCurrentSlide(
   mode: ExportMode,
   options: ExportOptions = {},
   onProgress?: (progress: ExportProgress) => void,
 ): Promise<string> {
+  const output = await createCurrentSlidePdf(mode, options, onProgress);
+  onProgress?.("saving");
+  return downloadPdf(output.data, output.suggestedFileName);
+}
+
+export async function createCurrentSlidePdf(
+  mode: ExportMode,
+  options: ExportOptions = {},
+  onProgress?: (progress: ExportProgress) => void,
+): Promise<CurrentSlidePdf> {
   onProgress?.("reading-slide");
   const slide = await getCurrentSlide(mode === "content");
   const documentUrl = await getPresentationFileUrl();
@@ -34,6 +50,9 @@ export async function exportCurrentSlide(
 
   const title = getPresentationBaseName(slide.presentationTitle, documentUrl);
   const fileName = `${title}_Slide${slide.slideIndex + 1}.pdf`;
-  onProgress?.("saving");
-  return downloadPdf(output, fileName);
+  return {
+    data: output,
+    slideId: slide.slideId,
+    suggestedFileName: fileName,
+  };
 }

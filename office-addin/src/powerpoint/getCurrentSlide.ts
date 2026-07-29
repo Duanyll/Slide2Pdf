@@ -3,6 +3,7 @@ import { computeContentBounds } from "./contentBounds";
 
 export interface CurrentSlide {
   presentationTitle: string;
+  slideId: string;
   slideIndex: number;
   contentBounds?: NormalizedRect;
 }
@@ -15,7 +16,7 @@ export async function getCurrentSlide(
     const selectedSlides = presentation.getSelectedSlides();
 
     presentation.load("title");
-    selectedSlides.load("items/index");
+    selectedSlides.load("items/id,items/index");
 
     if (includeContentBounds) {
       presentation.pageSetup.load("slideWidth,slideHeight");
@@ -50,6 +51,7 @@ export async function getCurrentSlide(
 
     return {
       presentationTitle: presentation.title,
+      slideId: slide.id,
       slideIndex: slide.index,
       contentBounds,
     };

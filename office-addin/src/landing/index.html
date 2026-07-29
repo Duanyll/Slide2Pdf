@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Slide2Pdf：在 macOS 版 PowerPoint 中将当前幻灯片导出为矢量 PDF，可选择保留整页或按内容裁切。"
+      content="Slide2Pdf：在 PowerPoint 中将当前幻灯片导出为矢量 PDF，可选择保留整页或按内容裁切。支持 macOS 和 Windows。"
     />
     <meta name="theme-color" content="#f5f1ea" />
     <link rel="icon" type="image/png" href="/assets/icon-32.png" />
     <link rel="canonical" href="https://slide2pdf.duanyll.com/" />
-    <title>Slide2Pdf · macOS PowerPoint 矢量 PDF 导出</title>
+    <title>Slide2Pdf · PowerPoint 矢量 PDF 导出</title>
   </head>
   <body>
     <header class="site-header">
@@ -32,22 +32,20 @@
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow"><span></span> PowerPoint for macOS</p>
+          <p class="eyebrow"><span></span> Office Add-in · macOS / Windows</p>
           <h1>把当前幻灯片，直接<br />导出成矢量 PDF。</h1>
           <p class="hero-description">
-            保留整页，或自动裁到可见对象的边界。演示文稿和导出的 PDF 都在
-            PowerPoint 内处理，不会上传。
+            保留整页，或自动裁到可见对象的边界。默认下载到本机；只有主动推送时，
+            生成的 PDF 才会发送到你填写的 Overleaf 仓库。
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#install">安装到 PowerPoint</a>
-            <a class="button secondary" href="/manifest.xml" download="Slide2Pdf.xml">
-              下载 XML 清单
-            </a>
+            <a class="button primary" href="#install">在 Mac 上安装 Office Add-in</a>
+            <a class="button secondary" href="#windows">查看 Windows 版本</a>
           </div>
           <ul class="feature-list" aria-label="功能特点">
             <li>保留矢量</li>
             <li>只导出当前页</li>
-            <li>文件不上传</li>
+            <li>macOS 与 Windows</li>
           </ul>
         </div>
 
@@ -81,10 +79,10 @@
 
       <section class="install-section" id="install">
         <div class="section-heading">
-          <p class="section-number">01 / INSTALL</p>
-          <h2>在 Mac 上安装</h2>
+          <p class="section-number">01 / OFFICE ADD-IN</p>
+          <h2>在 Mac 上安装 Office Add-in</h2>
           <p>
-            需要 Microsoft 365 PowerPoint。安装前，请先完全退出 PowerPoint。
+            需要新版 Microsoft 365 PowerPoint。安装前，请先完全退出 PowerPoint。
           </p>
         </div>
 
@@ -139,16 +137,53 @@ curl -fsSL https://slide2pdf.duanyll.com/manifest.xml \
         </p>
       </section>
 
+      <section class="windows-section" id="windows">
+        <div class="section-heading">
+          <p class="section-number">02 / WINDOWS</p>
+          <h2>Windows 上也可以使用 Slide2Pdf。</h2>
+          <p>
+            跨平台的 Office Add-in 是主要维护版本，适用于新版 Microsoft 365 PowerPoint。
+            如果需要兼容 PowerPoint 2013 及以上版本，也可以安装 Windows 专用的 VSTO 版。
+          </p>
+        </div>
+
+        <div class="vsto-card">
+          <div class="vsto-copy">
+            <p class="version-label">Windows VSTO</p>
+            <h3>直接安装到 PowerPoint 桌面版</h3>
+            <p>
+              支持导出当前幻灯片和按可见内容裁切。安装后，两个导出按钮会出现在
+              PowerPoint 的“开始”选项卡中。
+            </p>
+            <a
+              class="button primary"
+              href="https://github.com/Duanyll/Slide2Pdf/releases"
+              target="_blank"
+              rel="noreferrer"
+            >
+              从 GitHub 下载 VSTO 版
+            </a>
+          </div>
+
+          <div class="scoop-install">
+            <p>Scoop 安装</p>
+            <pre><code>scoop bucket add duanyll https://github.com/duanyll/scoop-bucket
+scoop install duanyll/slide2pdf</code></pre>
+          </div>
+        </div>
+      </section>
+
       <section class="details-section">
         <div class="detail-card">
-          <p class="section-number">02 / LOCAL</p>
-          <h2>演示文稿和 PDF 不会上传。</h2>
+          <p class="section-number">03 / LOCAL</p>
+          <h2>默认在 PowerPoint 内处理。</h2>
           <p>
-            转换在 PowerPoint 任务窗格内完成；服务器只负责加载插件页面。
+            本机下载不会发送演示文稿或 PDF；只有点击推送时，PDF 才会发送到你填写的
+            Overleaf 仓库。
           </p>
         </div>
         <div class="detail-card accent-card">
-          <p class="section-number">03 / UPDATE</p>
+          <p class="section-number">04 / UPDATE</p>
           <h2>大多数更新会自动生效。</h2>
           <p>
             重新打开任务窗格即可加载大多数更新。清单权限或 PowerPoint 按钮发生变化时，

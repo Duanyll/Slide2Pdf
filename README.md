@@ -10,8 +10,8 @@ Slide2Pdf 可以将当前幻灯片单独导出为 PDF，也可以自动裁到可
 
 | 版本 | 运行环境 | 主要特点 |
 | --- | --- | --- |
-| Windows | Windows 10/11、PowerPoint 2013 及以上版本 | 一键导出整页或按内容裁切；无需 Python |
-| macOS | Microsoft 365 PowerPoint | 保留矢量内容，可选透明背景；文件只在本机处理 |
+| Office Add-in | Windows 或 macOS、新版 Microsoft 365 PowerPoint | 跨平台主要维护版本；可下载到本机或推送到 Overleaf |
+| Windows VSTO | Windows 10/11、PowerPoint 2013 及以上版本 | Windows 兼容版本；一键导出整页或按内容裁切 |
 
 ### Windows 安装
 
@@ -49,7 +49,23 @@ macOS 版提供以下选项：
 
 导出文件名形如 `Presentation_Slide3_1.pdf`。再次导出同一页时，末尾序号会依次递增。
 
-演示文稿和导出的 PDF 都在 PowerPoint 任务窗格内处理，不会上传。
+本机下载不会上传演示文稿或 PDF。只有点击“生成并推送”时，生成的 PDF 才会发送到所填写的 Overleaf Git 仓库。
+
+#### 推送到 Overleaf
+
+Office Add-in 可以为每张幻灯片保存独立的 Overleaf Git 仓库和 PDF 路径：
+
+1. 展开“推送到 Overleaf”。
+2. 粘贴项目的 HTTPS Git 地址，并填写项目中的 PDF 路径和 Git Token。
+3. 选择输出范围，然后点击“生成并推送”。
+
+仓库地址和 PDF 路径随演示文稿保存；选择“记住此设备上的 Token”后，Token 只保存在当前设备的 Office 网页存储中，不会写入演示文稿。
+
+直接连接要求 Overleaf Git 服务允许 Slide2Pdf 的网页来源。`overleaf-pro` 管理员可以在部署配置中加入：
+
+```dotenv
+GIT_BRIDGE_ALLOWED_CORS_ORIGINS=https://slide2pdf.duanyll.com,https://localhost:3000
+```
 
 #### 裁切说明
 
@@ -61,8 +77,8 @@ Slide2Pdf exports the current PowerPoint slide as an individual PDF. It can also
 
 | Version | Requirements | Highlights |
 | --- | --- | --- |
-| Windows | Windows 10/11 and PowerPoint 2013 or later | Export at full size or crop to content; no Python required |
-| macOS | Microsoft 365 PowerPoint | Preserves vector content, offers transparent backgrounds, and processes files locally |
+| Office Add-in | Windows or macOS with a recent Microsoft 365 PowerPoint release | Primary cross-platform version; download locally or push to Overleaf |
+| Windows VSTO | Windows 10/11 and PowerPoint 2013 or later | Windows compatibility version; export at full size or crop to content |
 
 ### Install on Windows
 
@@ -100,7 +116,23 @@ The macOS version provides these options:
 
 Exported files are named like `Presentation_Slide3_1.pdf`. Exporting the same slide again increments the final number.
 
-Presentations and exported PDFs are processed inside the PowerPoint task pane and are not uploaded.
+Local downloads don't upload the presentation or PDF. The generated PDF is sent to the configured Overleaf Git repository only when you select **Generate and push**.
+
+#### Push to Overleaf
+
+The Office Add-in can remember a separate Overleaf Git repository and PDF path for each slide:
+
+1. Expand **Push to Overleaf**.
+2. Paste the project's HTTPS Git URL, then enter the PDF path and Git token.
+3. Choose the output bounds and select **Generate and push**.
+
+The repository URL and PDF path are stored in the presentation. If you choose to remember the token, it is stored only in the Office web storage on that device and isn't written to the presentation.
+
+Direct connections require the Overleaf Git service to allow the Slide2Pdf web origin. An `overleaf-pro` administrator can add:
+
+```dotenv
+GIT_BRIDGE_ALLOWED_CORS_ORIGINS=https://slide2pdf.duanyll.com,https://localhost:3000
+```
 
 #### Cropping details
 

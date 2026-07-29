@@ -38,6 +38,77 @@
         </label>
 
         <p id="save-hint" class="hint"></p>
+
+        <details id="overleaf-panel" class="overleaf-panel">
+          <summary>
+            <span>推送到 Overleaf</span>
+            <small>为当前幻灯片设置独立的仓库和 PDF 路径</small>
+          </summary>
+
+          <div class="overleaf-form">
+            <p id="overleaf-slide" class="current-slide">正在读取当前幻灯片…</p>
+
+            <label class="field" for="overleaf-remote">
+              <span>Git 仓库地址</span>
+              <input
+                id="overleaf-remote"
+                type="url"
+                inputmode="url"
+                autocomplete="url"
+                spellcheck="false"
+                placeholder="https://overleaf.example/git/project-id"
+              />
+              <small>从 Overleaf 项目的 Git 菜单复制 HTTPS 地址。</small>
+            </label>
+
+            <label class="field" for="overleaf-path">
+              <span>项目中的 PDF 路径</span>
+              <input
+                id="overleaf-path"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="figures/result.pdf"
+              />
+              <small>再次推送时会更新同一个文件。</small>
+            </label>
+
+            <label class="field" for="overleaf-token">
+              <span>Git Token</span>
+              <input
+                id="overleaf-token"
+                type="password"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="olp_…"
+              />
+            </label>
+
+            <label class="remember-option" for="remember-overleaf-token">
+              <input id="remember-overleaf-token" type="checkbox" />
+              <span>
+                <strong>记住此设备上的 Token</strong>
+                <small>Token 不会写入演示文稿。</small>
+              </span>
+            </label>
+
+            <label class="field" for="overleaf-export-mode">
+              <span>输出范围</span>
+              <select id="overleaf-export-mode">
+                <option value="content">按可见内容裁切</option>
+                <option value="slide">保留整页</option>
+              </select>
+            </label>
+
+            <div class="overleaf-actions">
+              <button id="save-overleaf-target" type="button">保存目标</button>
+              <button id="push-overleaf" class="primary" type="button">
+                生成并推送
+              </button>
+            </div>
+
+          </div>
+        </details>
       </section>
 
       <p id="status" role="status" aria-live="polite" data-state="idle" hidden></p>

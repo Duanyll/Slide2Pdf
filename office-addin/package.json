@@ -18,12 +18,16 @@
     "validate:local": "office-addin-manifest validate manifest.local.xml"
   },
   "dependencies": {
+    "@isomorphic-git/lightning-fs": "4.7.0",
+    "isomorphic-git": "1.40.0",
     "pdf-lib": "1.17.1"
   },
   "devDependencies": {
+    "@types/node": "24.13.3",
     "@types/office-js": "1.0.600",
     "copy-webpack-plugin": "14.0.0",
     "css-loader": "7.1.2",
+    "fake-indexeddb": "6.2.4",
     "fs-extra": "11.4.0",
     "html-webpack-plugin": "5.6.7",
     "office-addin-dev-certs": "2.0.10",
@@ -32,9 +36,9 @@
     "ts-loader": "9.6.2",
     "typescript": "5.9.3",
     "vitest": "4.1.10",
-    "wrangler": "4.114.0",
     "webpack": "5.109.0",
     "webpack-cli": "7.2.1",
-    "webpack-dev-server": "6.0.0"
+    "webpack-dev-server": "6.0.0",
+    "wrangler": "4.114.0"
   }
 }

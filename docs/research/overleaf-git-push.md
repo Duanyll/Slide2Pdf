@@ -12,7 +12,7 @@
 
 本次实现采用 direct-first：用户为每张幻灯片填写任意 HTTPS Git remote 和 PDF 路径，这些目标随演示文稿保存；PAT 按 endpoint 保存在 Office webview 的 `localStorage`，不会写入 PPT。Add-in 使用 `isomorphic-git` 和 LightningFS 管理完整浅克隆，push 前先 fast-forward pull，且永远不 force；push 后会重新 fetch 并核对远端 PDF。
 
-Cloudflare Worker 不再是默认依赖，也不由 Slide2Pdf 提供公共额度。目标 fork 已经支持精确来源的 CORS 白名单；实例管理员配置 `GIT_BRIDGE_ALLOWED_CORS_ORIGINS` 后即可直连。当前 `overleaf.villa.moe` 尚未放行生产和开发来源，实测预检仍返回 `403`；在实例无法配置 CORS 时，使用者可以在自己的 Cloudflare 账户中部署可选的无状态代理。
+Cloudflare Worker 不再是默认依赖，也不由 Slide2Pdf 提供公共额度。目标 fork 支持精确来源的 CORS 白名单；也可以像 `overleaf.villa.moe` 一样，在入口 Traefik 上只为 `/git/` 补 CORS。该实例已允许生产和开发来源直连；在实例无法配置 CORS 时，使用者可以在自己的 Cloudflare 账户中部署可选的无状态代理。
 
 ## 已核实的接口与认证方式
 
@@ -75,7 +75,7 @@ fork 的 Git Bridge 已有 CORS handler：
 GIT_BRIDGE_ALLOWED_CORS_ORIGINS=https://slide2pdf.duanyll.com,https://localhost:3000
 ```
 
-2026-07-29 对目标实例的探测与端到端验证结果：
+2026-07-29 Traefik 变更前的目标实例基线，以及同期端到端验证结果：
 
 | 探测 | 结果 |
 | --- | --- |
@@ -96,7 +96,7 @@ GIT_BRIDGE_ALLOWED_CORS_ORIGINS=https://slide2pdf.duanyll.com,https://localhost:
 
 由此可得：
 
-1. **默认使用 direct Git。** 实例在做快照后加入精确来源并重启 Git Bridge；Add-in 从本机存储读取每位用户自己的 PAT。
+1. **默认使用 direct Git。** 实例在做快照后通过 Git Bridge 自身或入口代理加入精确 CORS；Add-in 从本机存储读取每位用户自己的 PAT。`overleaf.villa.moe` 采用 Traefik 路由，只重启了 Traefik。
 2. **无法配置实例 CORS 时，由用户自部署代理。** Worker 额度和上游 allowlist 都归使用者自己的 Cloudflare 账户管理，Slide2Pdf 不承担公共代理成本。
 3. **不提供中央公共代理。** 接受任意 endpoint 的公共代理既容易滥用额度，也会成为 SSRF 入口。
 
@@ -124,6 +124,79 @@ Workers 的 `Request` 可以用新 URL 复用原请求的方法、headers 和 bo
 Cloudflare 虽支持预编译 Wasm，[见 WebAssembly 文档](https://developers.cloudflare.com/workers/runtime-apis/webassembly/)，但每个 isolate 只有 128 MB 内存，请求体上限还取决于账户套餐，[见 Workers limits](https://developers.cloudflare.com/workers/platform/limits/)。把 packfile 原样流式代理不会触碰这类复杂度；在 Worker 中解包、改树、重新打包则会迅速碰到内存、CPU 和临时文件系统问题。
 
 把 PAT 放进 Worker Secret **不要求 Worker 自己运行 Git**。本次 POC 已验证：Add-in 侧的 `isomorphic-git` 仍然管理完整工作树，Worker 只注入认证头并转发字节流。只有当 API 的输入变成“单独一个 PDF”，而不是 Git smart-HTTP 请求时，Worker 才必须承担 clone、修改、commit 和 push，此方案首版不采用。
+
+## 部署选择：同源子路径与自部署 Worker
+
+对当前由 Traefik 统一入口的自托管实例，优先级建议是：**Traefik 只为 `/git/` 补 CORS > 把 Add-in 放进 Overleaf 同源子路径 > 自部署 Cloudflare Worker**。三种方式都继续使用 PAT；它们只改变浏览器到 Git Bridge 的网络路径，不改变 Git 提交、完整树保护和非 force push 逻辑。
+
+### 首选：在 Traefik 的 `/git/` 路由补 CORS
+
+这条路径不迁移 Add-in，也不改 manifest 或客户端：任务窗格仍来自 `https://slide2pdf.duanyll.com`，remote 仍是 `https://overleaf.villa.moe/git/<project-id>`。给同一 Overleaf upstream 增加一条优先级高于通用 Host 路由的 `Host && PathPrefix('/git/')` router，并挂 Headers middleware。Traefik 官方说明，配置了 CORS headers 后，预检由 middleware 直接生成、不会传给后端；普通响应也会加相应 CORS 头。这样可以绕过后端 Git Bridge 本身对该预检返回的 `403`，而实际 GET/POST 仍按原路径交给 Overleaf Nginx 和 Git Bridge。[Traefik Headers middleware](https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/headers/)；路由冲突可用显式 `priority` 解决，[见 Rules & Priority](https://doc.traefik.io/traefik/reference/routing-configuration/http/routing/rules-and-priority/)。
+
+下面是 File Provider 的示意配置；entrypoint、TLS 和 upstream service 名称要替换为现有部署值，且 `priority` 必须确实高于现有 Overleaf router：
+
+```yaml
+http:
+  routers:
+    overleaf-git-cors:
+      rule: Host(`overleaf.villa.moe`) && PathPrefix(`/git/`)
+      entryPoints: [websecure]
+      priority: 1000
+      tls: {}
+      middlewares: [slide2pdf-git-cors]
+      service: overleaf-nginx-for-slide2pdf
+
+  middlewares:
+    slide2pdf-git-cors:
+      headers:
+        accessControlAllowOriginList:
+          - https://slide2pdf.duanyll.com
+          - https://localhost:3000
+        accessControlAllowMethods: [GET, HEAD, POST, OPTIONS]
+        accessControlAllowHeaders: [Authorization, Content-Type]
+        accessControlExposeHeaders: [WWW-Authenticate]
+        accessControlMaxAge: 86400
+        addVaryHeader: true
+
+  services:
+    overleaf-nginx-for-slide2pdf:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://OVERLEAF_NGINX_HOST:PORT
+```
+
+上游地址必须固定，不能来自浏览器参数。这里也故意不启用 `accessControlAllowCredentials`：Add-in 使用显式 `Authorization` 头传 PAT，不需要把 Overleaf Cookie 带进跨源 Git 请求。上线前先按运维约定做快照，再验证一次未认证预检和带测试 PAT 的 `info/refs`；同时确认 `/git/` 之外的 Overleaf 路由没有挂这组头。这里不需要 `GIT_BRIDGE_ALLOWED_CORS_ORIGINS`，因为后端 `CORSHandler` 对带 `Origin` 的非 OPTIONS 请求不会拒绝，只是不加 allow header；Traefik 会加响应头，而 OPTIONS 已被它截获。[fork 的 `CORSHandler`](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/git-bridge/src/main/java/uk/ac/ic/wlgitbridge/server/CORSHandler.java#L20-L49)
+
+这条方案已于 2026-07-29 部署到 `overleaf.villa.moe`：为现有 `overleaf-service` 增加 priority 100 的 `/git/` 专用 router，只允许 `https://slide2pdf.duanyll.com` 和 `https://localhost:3000`。部署前外部预检为 `403`；部署后两个允许的 Origin 均为 `200` 并获得精确 ACAO，其他 Origin 不获得 ACAO；测试 PAT 的 `git-upload-pack` advertisement 仍为 `200`。普通 Git 响应带 `Vary: Origin`，Overleaf、Slurm 和 demo 的既有入口也都保持 `200`。
+
+### 可行：在 `overleaf.villa.moe/slide2pdf/` 提供静态 Add-in
+
+如果 `taskpane.html` 和 Git remote 都使用 `https://overleaf.villa.moe` 的相同 scheme、host 和 port，Office webview 中的请求就是同源请求，浏览器不会执行 CORS 检查；Office Add-in 仍受普通浏览器同源策略约束，[Microsoft 的说明](https://learn.microsoft.com/en-us/office/dev/add-ins/develop/addressing-same-origin-policy-limitations)也明确指出策略以任务窗格当前页面为基准。可以利用 fork 已预留的 `/etc/nginx/vhost-extras/overleaf/*.conf` 扩展点，而不覆盖上游 `overleaf.conf`；该文件同时表明现有 `/git/` 仍会独立转发到 Git Bridge，[见固定版本 Nginx 配置](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/server-ce/nginx/overleaf.conf#L12-L38)。例如把 `office-addin/dist` 只读挂载为 `/srv/www/slide2pdf`，再加入：
+
+```nginx
+location = /slide2pdf {
+    return 308 /slide2pdf/;
+}
+
+location ^~ /slide2pdf/ {
+    root /srv/www;
+    try_files $uri =404;
+    add_header Cache-Control "no-cache";
+}
+```
+
+当前构建的 `taskpane.html` 使用相对的 `taskpane.js`、`assets/...`，Webpack 动态 chunk 也从入口脚本目录推导 public path，所以任务窗格可以在该前缀下加载；landing page 仍有 `/assets`、`/manifest.xml` 等根路径，若也要迁移 landing，需要先改为前缀安全的 URL。生产 manifest 的两处任务窗格地址都要改成 `https://overleaf.villa.moe/slide2pdf/taskpane.html`，图标也应改到同一前缀。`SourceLocation` 必须是 HTTPS URL且允许任意目录结构，[见 Microsoft manifest 文档](https://learn.microsoft.com/en-us/javascript/api/manifest/sourcelocation?view=common-js-preview)。`AppDomains` 不是 fetch allowlist，只控制桌面 Office 中的任务窗格导航；Microsoft 明确说重复列出 `SourceLocation` 自己的域没有作用，因此不必为同源 Git 再加一项，[见 `AppDomain`](https://learn.microsoft.com/en-us/javascript/api/manifest/appdomain?view=common-js-preview)。
+
+同源并不把网页登录 session 变成 Git 登录：Git Bridge 的过滤器只读取 HTTP Basic，仍要求用户名 `git` 和 PAT，[见 `Oauth2Filter`](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/git-bridge/src/main/java/uk/ac/ic/wlgitbridge/server/Oauth2Filter.java#L78-L139)。浏览器可能随同源请求带上该 webview 中属于 `/` 的 Cookie，但它们不会代替 PAT。代价是 Slide2Pdf JavaScript 进入 Overleaf 的同源信任边界；静态目录必须只允许受控发布。不要把 Overleaf Web 应用响应中的 `frame-ancestors 'none'` 或 `X-Frame-Options: SAMEORIGIN` 继承到该目录，因为 Office 网页版用 iframe 承载 Add-in，桌面端则使用 webview，[见 Office webview 说明](https://learn.microsoft.com/en-us/office/dev/add-ins/concepts/browsers-used-by-office-web-add-ins)。当前两个项目都没有注册 service worker；以后升级时仍应检查 scope，避免根作用域 worker 接管 `/slide2pdf/`。切换 SourceLocation 也会切换 `localStorage` origin，用户要重新输入一次 PAT。
+
+### 后备：用户自部署 Cloudflare Worker
+
+当前仓库**尚未接入 Worker**：[`wrangler.jsonc`](../../office-addin/wrangler.jsonc) 只有静态资产，没有 `main` 脚本。接入时仍让浏览器中的 `isomorphic-git` 运行完整 Git 客户端，Worker 只做固定上游的流式转发。最省 CORS 的部署是让 Worker 在 Add-in 自己的 origin 下接管例如 `/git-proxy/*`；Cloudflare 静态资产配置支持用 `run_worker_first` 指定先进入脚本的路径，[见 Static Assets routing](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/)。如果 Worker 使用独立 origin，它自己必须为 `https://slide2pdf.duanyll.com` 回答精确 CORS。
+
+客户端需要把“仓库身份”和“传输地址”分开：用户保存的 remote 仍是 Overleaf URL，新增一个按 endpoint 保存的可选 proxy base；调用 Git 时，把 remote 的 `/git/<id>` 映射成固定 Worker 下的 `/git-proxy/git/<id>`。`OverleafGitClient` 的 clone/pull/push 使用该 transport URL，本地 client、互斥锁和 LightningFS cache key 则同时包含 remote 与 proxy，防止切换代理后复用错误缓存。Worker 去掉 `/git-proxy`，保留剩余路径、query、method、`Authorization`、`Content-Type` 和 body，固定转发到一个配置好的 Overleaf origin，并流式返回 status、headers 和 body；Cloudflare 的 [`Request`](https://developers.cloudflare.com/workers/runtime-apis/request/)与[Streams](https://developers.cloudflare.com/workers/runtime-apis/streams/)接口支持这种透明转发。默认仍由 Add-in 提供每位用户的 PAT；若私有部署改为 Worker Secret 注入 PAT，则必须另行限制调用者和项目，[见 Secrets](https://developers.cloudflare.com/workers/configuration/secrets/)。
+
+Worker 的优势是适用于无权改 Overleaf/Traefik 的实例，也能把代理额度交给使用者自己的账户；缺点是要新增 transport URL 配置、CORS/allowlist/日志防泄漏测试和一层外部故障点。对目前可管理 Traefik 的 `overleaf.villa.moe`，它没有比 Traefik CORS middleware 更直接。
 
 ## 最小实现建议
 
@@ -216,7 +289,7 @@ Git token 能访问该用户有权限的项目。本次实现允许用户选择�
 1. **已完成：** 拆分 PDF 生成与下载，为每张幻灯片保存 remote/path，并按 endpoint 保存可选 PAT。
 2. **已完成：** 使用 `isomorphic-git` + LightningFS 完成浅 clone、fast-forward pull、覆盖 PDF、commit、非 force push，以及 push 后的远端 PDF 核对。
 3. **已完成：** 本地 smart-HTTP、生产 web HTTP 适配器、完整树保留、缓存 pull、50 MiB 预检和目标实例 live test。
-4. **部署前：** 为 `overleaf.villa.moe` 配置生产与本地开发来源的 CORS 白名单；按全局运维约定先做实例快照。
+4. **已完成：** 为 `overleaf.villa.moe` 的 `/git/` Traefik 路由配置生产与本地开发来源的 CORS；变更前已做实例快照。
 5. **已完成：** push 被非 fast-forward 拒绝后恢复到干净基线，下一次手动推送会先拉取远端更新；后续可再加入同一次操作内的自动重试。
 6. **后续增强：** 为不能修改 CORS 的用户提供自部署 Worker 模板。
 

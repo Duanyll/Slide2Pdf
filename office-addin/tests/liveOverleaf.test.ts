@@ -84,10 +84,27 @@ describe.runIf(enabled)("live Overleaf Git Bridge", () => {
         }
       }
 
-      const finalOid = await git.resolveRef({ fs, dir, ref: "HEAD" });
-      const finalTree = (await git.readCommit({ fs, dir, oid: finalOid })).commit
-        .tree;
+      const verificationDir = makeTemporaryDirectory();
+      await git.clone({
+        fs,
+        http,
+        dir: verificationDir,
+        url: remoteUrl,
+        singleBranch: true,
+        depth: 1,
+        noTags: true,
+        onAuth,
+      });
+      const finalOid = await git.resolveRef({
+        fs,
+        dir: verificationDir,
+        ref: "HEAD",
+      });
+      const finalTree = (
+        await git.readCommit({ fs, dir: verificationDir, oid: finalOid })
+      ).commit.tree;
       expect(finalTree).toBe(initialTree);
+      expect(fs.existsSync(path.join(verificationDir, filePath))).toBe(false);
     },
     120_000,
   );

@@ -10,7 +10,7 @@
 
 这项功能可行，而且不需要复用 Overleaf 网页端的 session、内部 HTTP API 或 WebSocket。Office Add-in 可以在浏览器环境里运行 `isomorphic-git`，把生成的 PDF 写入一个浅克隆的工作树，提交后通过 Overleaf Git Bridge 推送。
 
-本次实现采用 direct-first：用户为每张幻灯片填写任意 HTTPS Git remote 和 PDF 路径，这些目标随演示文稿保存；PAT 按 endpoint 保存在 Office webview 的 `localStorage`，不会写入 PPT。Add-in 使用 `isomorphic-git` 和 LightningFS 管理完整浅克隆，push 前先 fast-forward pull，且永远不 force。
+本次实现采用 direct-first：用户为每张幻灯片填写任意 HTTPS Git remote 和 PDF 路径，这些目标随演示文稿保存；PAT 按 endpoint 保存在 Office webview 的 `localStorage`，不会写入 PPT。Add-in 使用 `isomorphic-git` 和 LightningFS 管理完整浅克隆，push 前先 fast-forward pull，且永远不 force；push 后会重新 fetch 并核对远端 PDF。
 
 Cloudflare Worker 不再是默认依赖，也不由 Slide2Pdf 提供公共额度。目标 fork 已经支持精确来源的 CORS 白名单；实例管理员配置 `GIT_BRIDGE_ALLOWED_CORS_ORIGINS` 后即可直连。当前 `overleaf.villa.moe` 尚未放行生产和开发来源，实测预检仍返回 `403`；在实例无法配置 CORS 时，使用者可以在自己的 Cloudflare 账户中部署可选的无状态代理。
 
@@ -89,10 +89,10 @@ GIT_BRIDGE_ALLOWED_CORS_ORIGINS=https://slide2pdf.duanyll.com,https://localhost:
 | 原生 Git clone、添加 PDF、push、删除 PDF、再次 push | 全部成功 |
 | `isomorphic-git` 浅 clone、二进制 PDF push、清理 push | 全部成功 |
 | `isomorphic-git` 经本地 Worker 流式代理完成同一流程 | 全部成功；PAT 由 Worker Secret 注入，客户端未持有 PAT |
-| 本次实现的 `OverleafGitClient` 在目标实例添加并清理 PDF | 全部成功；最终 tree 与测试前一致 |
+| 本次实现的 `OverleafGitClient` 在目标实例添加并清理 PDF | 全部成功；清理后从远端独立重新 clone，确认最终 tree 与测试前一致且临时 PDF 不存在 |
 | 生产使用的 `isomorphic-git/http/web` + LightningFS | 在 fake IndexedDB 与本地 smart-HTTP 服务上通过完整 push 测试 |
 
-验证使用 `.env` 中的测试凭据，但没有输出或复制 token。可行性调查最初产生了 6 个测试 commit；实现完成后又运行了一次 opt-in live test，产生 2 个“添加 PDF / 清理 PDF”commit。最终远端 tree 与测试前完全一致，项目内容已恢复；共 8 个测试 commit 仍保留在 Git 历史中。`.env` 中可见的变量名为 `OVERLEAF_ENDPOINT`、`OVERLEAF_GIT_KEY` 和 `OVERLEAF_GIT_REPO`；本报告没有记录对应值。
+验证使用 `.env` 中的测试凭据，但没有输出或复制 token。可行性调查最初产生了 6 个测试 commit；首轮实现验证和审查修复后的独立远端复核分别产生 2 个“添加 PDF / 清理 PDF”commit。最终远端 tree 与测试前完全一致，项目内容已恢复；共 10 个测试 commit 仍保留在 Git 历史中。`.env` 中可见的变量名为 `OVERLEAF_ENDPOINT`、`OVERLEAF_GIT_KEY` 和 `OVERLEAF_GIT_REPO`；本报告没有记录对应值。
 
 由此可得：
 
@@ -173,7 +173,7 @@ push（永远不 force）
 
 目标 fork 还有一个比普通 Git 冲突更窄、但确实存在的竞态窗口：服务端检查 history version 后立即返回 `202`，随后才异步逐个 upsert 和删除文件，[见接收与异步处理流程](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/web/modules/git-bridge/app/src/GitBridgeApiController.mjs#L322-L365)。如果用户恰好在这个窗口里通过网页端编辑，Git push 可能覆盖这次修改；若网页端刚创建了一个不在被推 Git 树里的新文件，异步删除阶段还可能把它删掉。处理中途报错也没有事务回滚，理论上会留下部分更新。
 
-首版应把这个限制写进操作约束：推送的几秒内不要同时在网页端编辑；每次 push 成功后再 fetch 一次核对远端 HEAD 和目标 PDF；遇到异常时停止自动重试并提示用户检查项目。长期可在 fork 侧把 version check 与整批快照应用改成原子操作，但这不是 Slide2Pdf 客户端能单独解决的问题。
+当前实现会在实际推送期间提示不要同时在网页端编辑；每次 push 成功后再 fetch 最新远端 HEAD，并逐字节核对目标 PDF；核对异常时停止自动重试并提示失败。长期可在 fork 侧把 version check 与整批快照应用改成原子操作，但这不是 Slide2Pdf 客户端能单独解决的问题。
 
 ### 4. 文件名采用稳定路径，不再追加下载序号
 
@@ -190,7 +190,7 @@ figures/experiment-overview.pdf
 
 PDF 会被 fork 判断为 binary file，并通过 `upsertFileWithPath` 创建或替换，[见 `processFileUpdate`](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/web/modules/git-bridge/app/src/GitBridgeApiController.mjs#L489-L529)。路径不能含 `..`、不能以 `/` 开头，也不能进入 `.git`，[见路径校验](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/web/modules/git-bridge/app/src/GitBridgeApiController.mjs#L610-L637)。
 
-Git Bridge 默认限制单文件不超过 50 MiB、项目文件数不超过 2000，[见配置模板](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/git-bridge/conf/envsubst_template.json#L12-L15)；部署方可以覆盖这些值。客户端应在 push 前检查 PDF 大小并给出明确错误，不要等服务端处理完整个 packfile 后才失败。
+Git Bridge 默认限制单文件不超过 50 MiB、项目文件数不超过 2000，[见配置模板](https://github.com/ayaka-notes/overleaf-pro/blob/49b8243d9ad5d9c29b0b1c348a0bb7a3b8e71eee/services/git-bridge/conf/envsubst_template.json#L12-L15)；部署方可以覆盖这些值。客户端会在连接前按默认的 50 MiB 限制检查 PDF 大小并给出明确错误，避免服务端处理完整个 packfile 后才失败。若部署方调整了限制，后续可再把该阈值做成实例配置。
 
 ## 必须防住的两个数据风险
 
@@ -214,8 +214,8 @@ Git token 能访问该用户有权限的项目。本次实现允许用户选择�
 ## 推荐落地顺序
 
 1. **已完成：** 拆分 PDF 生成与下载，为每张幻灯片保存 remote/path，并按 endpoint 保存可选 PAT。
-2. **已完成：** 使用 `isomorphic-git` + LightningFS 完成浅 clone、fast-forward pull、覆盖 PDF、commit 和非 force push。
-3. **已完成：** 本地 smart-HTTP、生产 web HTTP 适配器、完整树保留、缓存 pull 和目标实例 live test。
+2. **已完成：** 使用 `isomorphic-git` + LightningFS 完成浅 clone、fast-forward pull、覆盖 PDF、commit、非 force push，以及 push 后的远端 PDF 核对。
+3. **已完成：** 本地 smart-HTTP、生产 web HTTP 适配器、完整树保留、缓存 pull、50 MiB 预检和目标实例 live test。
 4. **部署前：** 为 `overleaf.villa.moe` 配置生产与本地开发来源的 CORS 白名单；按全局运维约定先做实例快照。
 5. **已完成：** push 被非 fast-forward 拒绝后恢复到干净基线，下一次手动推送会先拉取远端更新；后续可再加入同一次操作内的自动重试。
 6. **后续增强：** 为不能修改 CORS 的用户提供自部署 Worker 模板。

@@ -32,15 +32,18 @@ describe("OverleafGitClient", () => {
       fs,
       http,
     });
+    const progress: string[] = [];
 
     const result = await client.pushPdf({
       data: new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]),
       filePath: "figures/result.pdf",
       remoteUrl: `${server.origin}/project.git`,
       token: "test-token",
+      onProgress: (step) => progress.push(step),
     });
 
     expect(result).toMatchObject({ changed: true, branch: "master" });
+    expect(progress.at(-1)).toBe("verifying");
 
     const checkout = makeTemporaryDirectory("slide2pdf-git-checkout-");
     execFileSync("git", ["clone", fixture.remote, checkout]);
@@ -138,6 +141,44 @@ describe("OverleafGitClient", () => {
     expect(
       fs.readFileSync(path.join(checkout, "figures", "result.pdf")),
     ).toEqual(Buffer.from([9]));
+  });
+
+  it("rejects PDFs larger than the default Overleaf file limit before connecting", async () => {
+    const workingDirectory = makeTemporaryDirectory("slide2pdf-git-work-");
+    const client = new OverleafGitClient({ dir: workingDirectory, fs, http });
+
+    await expect(
+      client.pushPdf({
+        data: new Uint8Array(50 * 1024 * 1024 + 1),
+        filePath: "figures/too-large.pdf",
+        remoteUrl: "https://127.0.0.1:1/git/project",
+        token: "test-token",
+      }),
+    ).rejects.toThrow("50 MiB");
+  });
+
+  it("refuses to reuse a cached client for a different remote", async () => {
+    const fixture = createRemoteFixture();
+    const server = await startGitHttpServer(fixture.root);
+    serverClosers.push(server.close);
+    const workingDirectory = makeTemporaryDirectory("slide2pdf-git-work-");
+    const client = new OverleafGitClient({ dir: workingDirectory, fs, http });
+
+    await client.pushPdf({
+      data: new Uint8Array([1]),
+      filePath: "figures/result.pdf",
+      remoteUrl: `${server.origin}/project.git`,
+      token: "test-token",
+    });
+
+    await expect(
+      client.pushPdf({
+        data: new Uint8Array([2]),
+        filePath: "figures/result.pdf",
+        remoteUrl: "https://overleaf.example/git/another-project",
+        token: "another-token",
+      }),
+    ).rejects.toThrow("不同的 Git 仓库");
   });
 });
 

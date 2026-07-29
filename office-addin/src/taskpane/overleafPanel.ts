@@ -28,7 +28,8 @@ const gitProgressMessages: Record<GitSyncProgress, string> = {
   cloning: "首次连接，正在读取 Overleaf 项目…",
   pulling: "正在同步 Overleaf 项目的最新版本…",
   writing: "正在更新项目中的 PDF…",
-  pushing: "正在推送到 Overleaf…",
+  pushing: "正在推送到 Overleaf；完成前请不要同时在网页端编辑…",
+  verifying: "正在核对 Overleaf 中的 PDF…",
 };
 
 export function initializeOverleafPanel(options: OverleafPanelOptions): void {
@@ -137,10 +138,11 @@ export function initializeOverleafPanel(options: OverleafPanelOptions): void {
       options.showStatus("请先选择一张幻灯片。", "error");
       return;
     }
+    const requestedSlideId = activeSlideId;
 
     options.setBusy(true);
     try {
-      const { target, token } = await persistForm(activeSlideId, true);
+      const { target, token } = await persistForm(requestedSlideId, true);
       const pdf = await createCurrentSlidePdf(
         exportMode.value as ExportMode,
         {
@@ -148,7 +150,7 @@ export function initializeOverleafPanel(options: OverleafPanelOptions): void {
         },
         options.showPdfProgress,
       );
-      if (pdf.slideId !== activeSlideId) {
+      if (pdf.slideId !== requestedSlideId) {
         throw new Error("生成 PDF 时切换了幻灯片。请确认当前页后重新推送。");
       }
 

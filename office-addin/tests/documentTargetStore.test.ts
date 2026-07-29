@@ -66,24 +66,6 @@ describe("DocumentTargetStore", () => {
 
     expect(store.get("slide-1")).toBeNull();
   });
-
-  it("removes a slide target and persists the change", async () => {
-    const { settings, value } = createSettings({
-      version: 1,
-      targets: {
-        "slide-1": {
-          remoteUrl: "https://overleaf.example/git/one",
-          filePath: "figures/one.pdf",
-        },
-      },
-    });
-    const store = new DocumentTargetStore(settings);
-
-    await store.remove("slide-1");
-
-    expect(value()).toEqual({ version: 1, targets: {} });
-    expect(settings.save).toHaveBeenCalledOnce();
-  });
 });
 
 describe("createOfficeDocumentSettingsAdapter", () => {

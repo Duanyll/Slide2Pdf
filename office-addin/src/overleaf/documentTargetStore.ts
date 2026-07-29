@@ -49,13 +49,6 @@ export class DocumentTargetStore {
     await this.settings.save();
   }
 
-  async remove(slideId: string): Promise<void> {
-    const documentTargets = this.read();
-    delete documentTargets.targets[slideId];
-    this.settings.set(SETTINGS_KEY, documentTargets);
-    await this.settings.save();
-  }
-
   private read(): SavedDocumentTargets {
     const value = this.settings.get(SETTINGS_KEY);
     if (!isSavedDocumentTargets(value)) {

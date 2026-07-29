@@ -61,6 +61,8 @@ Office Add-in 可以为每张幻灯片保存独立的 Overleaf Git 仓库和 PDF
 
 仓库地址和 PDF 路径随演示文稿保存；选择“记住此设备上的 Token”后，Token 只保存在当前设备的 Office 网页存储中，不会写入演示文稿。
 
+为避免更新 PDF 时影响项目中的其他文件，插件会在当前设备的站点数据中缓存该 Overleaf 项目的当前文件树。清除 Slide2Pdf 的站点数据即可删除这份缓存和已记住的 Token。
+
 直接连接要求 Overleaf Git 服务允许 Slide2Pdf 的网页来源。`overleaf-pro` 管理员可以在部署配置中加入：
 
 ```dotenv
@@ -127,6 +129,8 @@ The Office Add-in can remember a separate Overleaf Git repository and PDF path f
 3. Choose the output bounds and select **Generate and push**.
 
 The repository URL and PDF path are stored in the presentation. If you choose to remember the token, it is stored only in the Office web storage on that device and isn't written to the presentation.
+
+To update one PDF without affecting other project files, the add-in caches the Overleaf project's current file tree in this device's site data. Clear Slide2Pdf's site data to remove that cache and any remembered tokens.
 
 Direct connections require the Overleaf Git service to allow the Slide2Pdf web origin. An `overleaf-pro` administrator can add:
 

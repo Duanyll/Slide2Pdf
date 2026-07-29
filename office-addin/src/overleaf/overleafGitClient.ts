@@ -13,7 +13,14 @@ type WritableFsClient = PromiseFsClient & {
   };
 };
 
-export type GitSyncProgress = "cloning" | "pulling" | "writing" | "pushing";
+export type GitSyncProgress =
+  | "cloning"
+  | "pulling"
+  | "writing"
+  | "pushing"
+  | "verifying";
+
+const DEFAULT_MAX_PDF_BYTES = 50 * 1024 * 1024;
 
 export interface PushPdfOptions {
   remoteUrl: string;
@@ -45,9 +52,26 @@ export class OverleafGitClient {
   }
 
   async pushPdf(options: PushPdfOptions): Promise<PushPdfResult> {
+    if (options.data.byteLength > DEFAULT_MAX_PDF_BYTES) {
+      throw new Error("PDF 超过 Overleaf 默认的 50 MiB 单文件限制。");
+    }
+
     const onAuth = () => ({ username: "git", password: options.token });
 
     if (await this.hasClone()) {
+      const configuredRemote = await git.getConfig({
+        fs: this.fs,
+        dir: this.dir,
+        path: "remote.origin.url",
+      });
+      if (
+        configuredRemote &&
+        normalizeRemoteUrl(configuredRemote) !==
+          normalizeRemoteUrl(options.remoteUrl)
+      ) {
+        throw new Error("此本地缓存属于不同的 Git 仓库，无法继续推送。");
+      }
+
       options.onProgress?.("pulling");
       await git.pull({
         fs: this.fs,
@@ -135,6 +159,29 @@ export class OverleafGitClient {
             "Overleaf 拒绝了 Git push。",
         );
       }
+
+      options.onProgress?.("verifying");
+      const fetchResult = await git.fetch({
+        fs: this.fs,
+        http: this.http,
+        dir: this.dir,
+        ref: branch,
+        depth: 1,
+        singleBranch: true,
+        onAuth,
+      });
+      if (!fetchResult.fetchHead) {
+        throw new Error("推送完成，但无法读取 Overleaf 的最新版本。");
+      }
+      const remotePdf = await git.readBlob({
+        fs: this.fs,
+        dir: this.dir,
+        oid: fetchResult.fetchHead,
+        filepath: options.filePath,
+      });
+      if (!sameBytes(remotePdf.blob, options.data)) {
+        throw new Error("推送后核对失败：Overleaf 中的 PDF 与生成结果不一致。");
+      }
     } catch (error) {
       await this.restoreBase(branch, baseOid);
       throw error;
@@ -182,4 +229,13 @@ export class OverleafGitClient {
       }
     }
   }
+}
+
+function normalizeRemoteUrl(remoteUrl: string): string {
+  return remoteUrl.replace(/\/+$/, "");
+}
+
+function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.byteLength !== right.byteLength) return false;
+  return left.every((value, index) => value === right[index]);
 }

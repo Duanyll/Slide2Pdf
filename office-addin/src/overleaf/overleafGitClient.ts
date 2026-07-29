@@ -180,7 +180,7 @@ export class OverleafGitClient {
         filepath: options.filePath,
       });
       if (!sameBytes(remotePdf.blob, options.data)) {
-        throw new Error("推送后核对失败：Overleaf 中的 PDF 与生成结果不一致。");
+        throw new Error("推送后核对失败：Git 仓库中的 PDF 与生成结果不一致。");
       }
     } catch (error) {
       await this.restoreBase(branch, baseOid);

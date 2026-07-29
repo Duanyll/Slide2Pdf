@@ -29,7 +29,7 @@ const gitProgressMessages: Record<GitSyncProgress, string> = {
   pulling: "正在同步 Overleaf 项目的最新版本…",
   writing: "正在更新项目中的 PDF…",
   pushing: "正在推送到 Overleaf；完成前请不要同时在网页端编辑…",
-  verifying: "正在核对 Overleaf 中的 PDF…",
+  verifying: "正在核对 Git 仓库中的 PDF…",
 };
 
 export function initializeOverleafPanel(options: OverleafPanelOptions): void {

@@ -46,7 +46,6 @@ describe.runIf(enabled)("live Overleaf Git Bridge", () => {
       const initialTree = (await git.readCommit({ fs, dir, oid: initialOid }))
         .commit.tree;
       const filePath = `slide2pdf-feasibility/implementation-${Date.now()}.pdf`;
-      let added = false;
 
       try {
         const client = new OverleafGitClient({ dir, fs, http });
@@ -56,24 +55,34 @@ describe.runIf(enabled)("live Overleaf Git Bridge", () => {
           remoteUrl,
           token,
         });
-        added = result.changed;
         expect(result.changed).toBe(true);
       } finally {
-        if (added) {
-          fs.unlinkSync(path.join(dir, filePath));
-          await git.remove({ fs, dir, filepath: filePath });
+        const cleanupDir = makeTemporaryDirectory();
+        await git.clone({
+          fs,
+          http,
+          dir: cleanupDir,
+          url: remoteUrl,
+          singleBranch: true,
+          depth: 1,
+          noTags: true,
+          onAuth,
+        });
+        if (fs.existsSync(path.join(cleanupDir, filePath))) {
+          fs.unlinkSync(path.join(cleanupDir, filePath));
+          await git.remove({ fs, dir: cleanupDir, filepath: filePath });
           await git.commit({
             fs,
-            dir,
+            dir: cleanupDir,
             message: `Remove ${filePath} after Slide2Pdf test`,
             author: { name: "Slide2Pdf", email: "slide2pdf@localhost" },
           });
-          const branch = await git.currentBranch({ fs, dir });
+          const branch = await git.currentBranch({ fs, dir: cleanupDir });
           if (!branch) throw new Error("Live test clone has no current branch.");
           const result = await git.push({
             fs,
             http,
-            dir,
+            dir: cleanupDir,
             ref: branch,
             force: false,
             onAuth,

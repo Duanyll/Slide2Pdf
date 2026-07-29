@@ -92,7 +92,7 @@ GIT_BRIDGE_ALLOWED_CORS_ORIGINS=https://slide2pdf.duanyll.com,https://localhost:
 | 本次实现的 `OverleafGitClient` 在目标实例添加并清理 PDF | 全部成功；清理后从远端独立重新 clone，确认最终 tree 与测试前一致且临时 PDF 不存在 |
 | 生产使用的 `isomorphic-git/http/web` + LightningFS | 在 fake IndexedDB 与本地 smart-HTTP 服务上通过完整 push 测试 |
 
-验证使用 `.env` 中的测试凭据，但没有输出或复制 token。可行性调查最初产生了 6 个测试 commit；首轮实现验证和审查修复后的独立远端复核分别产生 2 个“添加 PDF / 清理 PDF”commit。最终远端 tree 与测试前完全一致，项目内容已恢复；共 10 个测试 commit 仍保留在 Git 历史中。`.env` 中可见的变量名为 `OVERLEAF_ENDPOINT`、`OVERLEAF_GIT_KEY` 和 `OVERLEAF_GIT_REPO`；本报告没有记录对应值。
+验证使用 `.env` 中的测试凭据，但没有输出或复制 token。可行性调查最初产生了 6 个测试 commit；首轮实现验证、审查修复后的独立远端复核和 cleanup 强化后的回归分别产生 2 个“添加 PDF / 清理 PDF”commit。最终远端 tree 与测试前完全一致，项目内容已恢复；共 12 个测试 commit 仍保留在 Git 历史中。`.env` 中可见的变量名为 `OVERLEAF_ENDPOINT`、`OVERLEAF_GIT_KEY` 和 `OVERLEAF_GIT_REPO`；本报告没有记录对应值。
 
 由此可得：
 

@@ -1,3 +1,5 @@
+import "../polyfills/browserBuffer";
+
 import LightningFS from "@isomorphic-git/lightning-fs";
 import http from "isomorphic-git/http/web";
 

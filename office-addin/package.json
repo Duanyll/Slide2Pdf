@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@isomorphic-git/lightning-fs": "4.7.0",
+    "buffer": "6.0.3",
     "isomorphic-git": "1.40.0",
     "pdf-lib": "1.17.1"
   },
